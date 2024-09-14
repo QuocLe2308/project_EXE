@@ -87,7 +87,7 @@ public class AdminServiceImp implements AdminService {
             admin.setPasswordHash(hashString(admin.getPasswordHash()));
             adminRepository.save(admin);
             JSONObject response = responseUtil.getSuccessResponse("success");
-            return response.toString();
+            return new JSONObject(admin).toString();
         }
     }
     @Override
@@ -102,7 +102,7 @@ public class AdminServiceImp implements AdminService {
             admin.setAddress(editAccountDTO.getAddress());
             adminRepository.save(admin);
             JSONObject response = responseUtil.getSuccessResponse("success");
-            return response.toString();
+            return new JSONObject(admin).toString();
         }
     }
     @Transactional

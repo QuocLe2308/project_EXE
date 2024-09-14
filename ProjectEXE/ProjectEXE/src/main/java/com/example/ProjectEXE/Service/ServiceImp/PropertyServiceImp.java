@@ -4,6 +4,8 @@ import com.example.ProjectEXE.DTO.Account.EditAccountDTO;
 import com.example.ProjectEXE.DTO.Property.EditPropertyDTO;
 import com.example.ProjectEXE.Models.Account.Landlord;
 import com.example.ProjectEXE.Models.Property;
+import com.example.ProjectEXE.Repository.Account.LandlordRepository;
+import com.example.ProjectEXE.Repository.Account.UserRepository;
 import com.example.ProjectEXE.Repository.PropertyRepository;
 import com.example.ProjectEXE.Service.IService.PropertyService;
 import com.example.ProjectEXE.Service.ServiceImp.Utils.ResponseUtil;
@@ -22,18 +24,23 @@ public class PropertyServiceImp implements PropertyService {
     @Autowired
     private final PropertyRepository propertyRepository;
     @Autowired
+    private final LandlordRepository landlordRepository;
+    @Autowired
+    private final UserRepository userRepository;
+    @Autowired
     private final ResponseUtil responseUtil;
 
     @Override
     public String createProperty(Property property) {
         List<String> validationResults = validateProperty(property, "add");
+        System.out.println(property.getOwner().getLandlordID());
         if (!validationResults.isEmpty()) {
             JSONObject response = responseUtil.getErrorResponse(String.join(", ", validationResults));
             return response.toString();
         } else {
             propertyRepository.save(property);
             JSONObject response = responseUtil.getSuccessResponse("success");
-            return response.toString();
+            return new JSONObject(property).toString();
         }
     }
 
@@ -51,23 +58,25 @@ public class PropertyServiceImp implements PropertyService {
 
     @Override
     public String editProperty(EditPropertyDTO editPropertyDTO) {
-        if (!propertyRepository.exitsByPropertyId(editPropertyDTO.getId())) {
+        if (!propertyRepository.existsByPropertyId(editPropertyDTO.getId())) {
             JSONObject response = responseUtil.getErrorResponse(String.join(", ", "Property does not exist!"));
             return response.toString();
         } else {
             Property property = propertyRepository.findByPropertyId(editPropertyDTO.getId());
+            property.setOwner(editPropertyDTO.getOwner());
             property.setDescription(editPropertyDTO.getDescription());
             property.setMonthlyRent(editPropertyDTO.getMonthlyRent());
             property.setMaxTenants(editPropertyDTO.getMaxTenants());
             property.setUser(editPropertyDTO.getUser());
             propertyRepository.save(property);
             JSONObject response = responseUtil.getSuccessResponse("success");
-            return response.toString();
+            return new JSONObject(property).toString();
         }
     }
     @Override
+    @Transactional
     public String deleteProperty(Long id) {
-        if (!propertyRepository.exitsByPropertyId(id)) {
+        if (!propertyRepository.existsByPropertyId(id)) {
             JSONObject response = responseUtil.getErrorResponse("Property does not exist");
             return response.toString();
         } else {
@@ -89,8 +98,7 @@ public class PropertyServiceImp implements PropertyService {
                 JSONObject response = responseUtil.getErrorResponse("Property not found");
                 return response.toString();
             }
-
-            return property.toString();
+            return new JSONObject(property).toString();
         }
     }
 
@@ -98,7 +106,7 @@ public class PropertyServiceImp implements PropertyService {
     public List<String> validateProperty(Property property, String type) {
 
         List<String> errors = new ArrayList<>();
-        if (type.equals("edit") && !propertyRepository.exitsByPropertyId(property.getPropertyID())) {
+        if (type.equals("edit") && !propertyRepository.existsByPropertyId(property.getPropertyId())) {
             errors.add("Property does not exist");
         }
         if (property.getPropertyName().isEmpty()) {
@@ -113,16 +121,23 @@ public class PropertyServiceImp implements PropertyService {
         if (property.getMonthlyRent() == null || property.getMonthlyRent() <= 0) {
             errors.add("Please enter a valid MonthlyRent");
         }
+        if (property.getOwner() == null || !landlordRepository.existsByLandlordID(property.getOwner().getLandlordID())) {
+            errors.add("Please enter a valid Owner");
+        }
+        if (!userRepository.existsById(property.getUser().getUserID())) {
+            errors.add("Please enter a valid User");
+        }
         return errors;
     }
 
     @Override
     public List<Property> sortByPriceHighToLow(){
-        return propertyRepository.findAllOrderByPriceDesc();
+        return propertyRepository.findAllByOrderByMonthlyRentDesc();
     }
 
     @Override
     public List<Property> sortByPriceLowToHigh(){
-        return propertyRepository.findAllByOrderByPriceAsc();
+        return propertyRepository.findAllByOrderByMonthlyRentAsc()
+                ;
     }
 }

@@ -19,7 +19,7 @@ public class Property {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "property_id")
-    private Long propertyID;
+    private Long propertyId;
 
     @ManyToOne
     @JoinColumn(name = "owner_id", nullable = false)
@@ -42,7 +42,7 @@ public class Property {
     private Integer maxTenants;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id")
     private User user;
 
     @Column(name = "created_at")
