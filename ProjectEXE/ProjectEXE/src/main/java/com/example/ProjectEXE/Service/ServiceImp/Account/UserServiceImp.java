@@ -120,7 +120,7 @@ public class UserServiceImp implements UserService {
                 user.setPasswordHash(hashString(user.getPasswordHash()));
                 userRepository.save(user);
                 JSONObject errorResponse = responseUtil.getSuccessResponse("Create success!");
-                return errorResponse.toString();
+                return new JSONObject(user).toString();
             }
         } else {
             JSONObject errorResponse = responseUtil.getErrorResponse("OTP is not correct!!");
@@ -155,7 +155,7 @@ public class UserServiceImp implements UserService {
             user.onUpdate();
             userRepository.save(user);
             JSONObject errorResponse = responseUtil.getSuccessResponse("Edit success!");
-            return errorResponse.toString();
+            return new JSONObject(user).toString();
         }
 
     }

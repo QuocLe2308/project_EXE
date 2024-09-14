@@ -45,7 +45,7 @@ public class LandlordServiceImp implements LandlordService {
             return errorResponse.toString();
         } else {
             JSONObject successResponse = responseUtil.getSuccessResponse("Success!", landlords);
-            return successResponse.toString();
+            return new JSONObject(successResponse).toString() ;
         }
     }
     @Override
@@ -88,7 +88,7 @@ public class LandlordServiceImp implements LandlordService {
             landlord.setPasswordHash(hashString(landlord.getPasswordHash()));
             landlordRepository.save(landlord);
             JSONObject response = responseUtil.getSuccessResponse("success");
-            return response.toString();
+            return new JSONObject(landlord).toString()  ;
         }
     }
     @Override
@@ -103,7 +103,7 @@ public class LandlordServiceImp implements LandlordService {
             landlord.setAddress(editAccountDTO.getAddress());
             landlordRepository.save(landlord);
             JSONObject response = responseUtil.getSuccessResponse("success");
-            return response.toString();
+            return new JSONObject(landlord).toString();
         }
     }
     @Override
