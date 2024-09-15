@@ -37,6 +37,9 @@ public class Landlord {
     @Column(name = "address", nullable = false)
     private String address;
 
+    @Column(name = "role", nullable = false)
+    private int role;
+
     @Column(name = "is_disable", nullable = false, columnDefinition = "TINYINT(1) default 0")
     private boolean isDisable;
 

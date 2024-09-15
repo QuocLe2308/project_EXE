@@ -85,6 +85,7 @@ public class LandlordServiceImp implements LandlordService {
             JSONObject response = responseUtil.getErrorResponse(String.join(", ", validationResults));
             return response.toString();
         } else {
+            landlord.setRole(2);
             landlord.setPasswordHash(hashString(landlord.getPasswordHash()));
             landlordRepository.save(landlord);
             JSONObject response = responseUtil.getSuccessResponse("success");

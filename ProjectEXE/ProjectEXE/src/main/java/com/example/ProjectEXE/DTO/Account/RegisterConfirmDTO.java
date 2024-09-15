@@ -19,6 +19,7 @@ public class RegisterConfirmDTO extends User {
                 user.getFullName(),
                 user.getPhoneNumber(),
                 user.getAddress(),
+                user.getRole(),
                 user.isDisable(),
                 user.getCreatedAt(),
                 user.getUpdatedAt()
@@ -34,6 +35,7 @@ public class RegisterConfirmDTO extends User {
                 this.getFullName(),
                 this.getPhoneNumber(),
                 this.getAddress(),
+                this.getRole(),
                 this.isDisable(),
                 this.getCreatedAt(),
                 this.getUpdatedAt()

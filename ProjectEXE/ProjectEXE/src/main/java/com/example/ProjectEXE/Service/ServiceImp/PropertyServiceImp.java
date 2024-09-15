@@ -1,8 +1,6 @@
 package com.example.ProjectEXE.Service.ServiceImp;
 
-import com.example.ProjectEXE.DTO.Account.EditAccountDTO;
 import com.example.ProjectEXE.DTO.Property.EditPropertyDTO;
-import com.example.ProjectEXE.Models.Account.Landlord;
 import com.example.ProjectEXE.Models.Property;
 import com.example.ProjectEXE.Repository.Account.LandlordRepository;
 import com.example.ProjectEXE.Repository.Account.UserRepository;
@@ -124,8 +122,10 @@ public class PropertyServiceImp implements PropertyService {
         if (property.getOwner() == null || !landlordRepository.existsByLandlordID(property.getOwner().getLandlordID())) {
             errors.add("Please enter a valid Owner");
         }
-        if (!userRepository.existsById(property.getUser().getUserID())) {
-            errors.add("Please enter a valid User");
+        if (property.getUser() != null) {
+            if (!userRepository.existsById(property.getUser().getUserID())) {
+                errors.add("Please enter a valid User");
+            }
         }
         return errors;
     }
