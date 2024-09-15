@@ -3,6 +3,7 @@ package com.example.ProjectEXE.Models;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Builder;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
@@ -11,6 +12,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@Builder
 @Table(name = "images")
 public class Image {
     @Id
@@ -22,8 +24,18 @@ public class Image {
     @JoinColumn(name = "property_id", nullable = false)
     private Property property;
 
-    @Column(name = "image_url", nullable = false)
+    @Column(name = "image_url")
     private String imageURL;
+
+    @Column(name = "imageName")
+    private String name;
+
+    @Column(name = "type")
+    private String type;
+
+    @Lob
+    @Column(name = "imagedata",length = 1000)
+    private byte[] imageData;
 
     @Column(name = "created_at")
     @Convert(converter = LocalDateTimeToIntegerConverter.class)

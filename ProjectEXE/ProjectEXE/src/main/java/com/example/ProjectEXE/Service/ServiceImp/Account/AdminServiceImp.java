@@ -84,6 +84,7 @@ public class AdminServiceImp implements AdminService {
             JSONObject response = responseUtil.getErrorResponse(String.join(", ", validationResults));
             return response.toString();
         } else {
+            admin.setRole(1);
             admin.setPasswordHash(hashString(admin.getPasswordHash()));
             adminRepository.save(admin);
             JSONObject response = responseUtil.getSuccessResponse("success");

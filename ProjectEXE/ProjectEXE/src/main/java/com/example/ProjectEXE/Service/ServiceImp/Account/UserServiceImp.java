@@ -117,6 +117,7 @@ public class UserServiceImp implements UserService {
                     JSONObject errorResponse = responseUtil.getErrorResponse("UserName must be the same as the UserName you originally registered with!");
                     return errorResponse.toString();
                 }
+                user.setRole(3);
                 user.setPasswordHash(hashString(user.getPasswordHash()));
                 userRepository.save(user);
                 JSONObject errorResponse = responseUtil.getSuccessResponse("Create success!");
