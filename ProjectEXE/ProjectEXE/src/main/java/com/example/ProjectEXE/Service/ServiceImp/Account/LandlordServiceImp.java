@@ -4,7 +4,6 @@ import com.example.ProjectEXE.DTO.Account.ChangePasswordAccountDTO;
 import com.example.ProjectEXE.DTO.Account.EditAccountDTO;
 import com.example.ProjectEXE.DTO.Account.ForgotPasswordAccountDTO;
 import com.example.ProjectEXE.DTO.Account.LoginDTO;
-import com.example.ProjectEXE.Models.Account.Admin;
 import com.example.ProjectEXE.Models.Account.Landlord;
 import com.example.ProjectEXE.Repository.Account.LandlordRepository;
 import com.example.ProjectEXE.Service.IService.Account.LandlordService;
@@ -209,7 +208,7 @@ public class LandlordServiceImp implements LandlordService {
         }
         return errors;
     }
-    // function to hash password
+
     public String hashString(String input) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");

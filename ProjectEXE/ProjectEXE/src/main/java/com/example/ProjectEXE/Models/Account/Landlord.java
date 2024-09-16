@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "landlords")
 public class Landlord {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "landlord_id")

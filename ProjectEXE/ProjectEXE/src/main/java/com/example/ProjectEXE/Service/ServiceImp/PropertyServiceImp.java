@@ -137,7 +137,6 @@ public class PropertyServiceImp implements PropertyService {
 
     @Override
     public List<Property> sortByPriceLowToHigh(){
-        return propertyRepository.findAllByOrderByMonthlyRentAsc()
-                ;
+        return propertyRepository.findAllByOrderByMonthlyRentAsc();
     }
 }
