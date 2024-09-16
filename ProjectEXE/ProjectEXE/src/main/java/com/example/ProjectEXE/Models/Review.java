@@ -7,7 +7,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Data
 @NoArgsConstructor
@@ -27,9 +26,6 @@ public class Review {
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
-
-    @Column(name = "rating", nullable = false)
-    private Integer rating;
 
     @Lob
     @Column(name = "comment")
