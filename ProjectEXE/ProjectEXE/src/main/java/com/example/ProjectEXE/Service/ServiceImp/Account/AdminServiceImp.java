@@ -11,7 +11,9 @@ import com.example.ProjectEXE.Service.ServiceImp.SendMailServiceImp;
 import com.example.ProjectEXE.Service.ServiceImp.Utils.JwtUtil;
 import com.example.ProjectEXE.Service.ServiceImp.Utils.ResponseUtil;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
+import jakarta.websocket.Session;
 import lombok.AllArgsConstructor;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +23,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 
 @Service
@@ -37,7 +40,7 @@ public class AdminServiceImp implements AdminService {
 
     @Override
     public String getAllAdmins() {
-        List<Admin> admins = adminRepository.findAll();
+        List<Admin> admins = adminRepository.findAllByisDisableFalse();
         admins.forEach(admin -> admin.setPasswordHash(""));
         if (admins.isEmpty()) {
             JSONObject errorResponse = responseUtil.getErrorResponse("Not Have Account!");
@@ -58,8 +61,7 @@ public class AdminServiceImp implements AdminService {
                     if (hashPassword.matches(admin.getPasswordHash())) {
                         String token = "";
                             token = jwtUtil.generateToken(loginDTO.getUsername(), admin.getAdminID(), 1);
-                            System.out.println(token);
-                        JSONObject response = responseUtil.getResponseLogin("success", token, "Login success!");
+                            JSONObject response = responseUtil.getResponseLogin("success", token, "Login success!");
                         return response.toString();
                     } else {
                         JSONObject errorResponse = responseUtil.getErrorResponse("Username or password is not correct!");
@@ -98,13 +100,19 @@ public class AdminServiceImp implements AdminService {
             JSONObject response = responseUtil.getErrorResponse(String.join(", ", "Admin does not exist!"));
             return response.toString();
         } else {
-            Admin admin = adminRepository.findByAdminID(editAccountDTO.getId());
-            admin.setFullName(editAccountDTO.getFullName());
-            admin.setPhoneNumber(editAccountDTO.getPhoneNumber());
-            admin.setAddress(editAccountDTO.getAddress());
-            adminRepository.save(admin);
-            JSONObject response = responseUtil.getSuccessResponse("success");
-            return new JSONObject(admin).toString();
+            if(!Objects.equals(editAccountDTO.getId(), jwtUtil.getUserId())){
+                JSONObject response = responseUtil.getErrorResponse(String.join(", ", "Invalid user operation!"));
+                return response.toString();
+            }else{
+                Admin admin = adminRepository.findByAdminID(editAccountDTO.getId());
+                admin.setFullName(editAccountDTO.getFullName());
+                admin.setPhoneNumber(editAccountDTO.getPhoneNumber());
+                admin.setAddress(editAccountDTO.getAddress());
+                adminRepository.save(admin);
+                JSONObject response = responseUtil.getSuccessResponse("success");
+                return new JSONObject(admin).toString();
+            }
+
         }
     }
     @Transactional
@@ -114,7 +122,8 @@ public class AdminServiceImp implements AdminService {
             JSONObject response = responseUtil.getErrorResponse("Admin does not exist");
             return response.toString();
         } else {
-            adminRepository.deleteAdminsByAdminID(id);
+            Admin admin = adminRepository.findByAdminID(id);
+            admin.setDisable(true);
             JSONObject response = responseUtil.getSuccessResponse("Delete Successfully!");
             return response.toString();
         }

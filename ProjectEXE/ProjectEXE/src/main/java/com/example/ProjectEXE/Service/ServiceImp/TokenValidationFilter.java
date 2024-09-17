@@ -28,13 +28,18 @@ public class TokenValidationFilter implements Filter {
 
     // List of endpoints that should bypass authentication
     private final List<String> BYPASS_URLS = Arrays.asList(
-            "/api/account/captcha",
-            "/api/account/login",
-            "/api/activity",
-            "/api/user/captcha",
+            "/api/captcha",
+            "/api/admin/login",
+            "/api/admin/forgot_password_send",
+            "/api/admin/forgot_password_confirm",
+            "/api/user/register_send",
+            "/api/user/register_confirm",
             "/api/user/login",
-            "/api/doctor/export",
-            "/api/doctor/import"
+            "/api/user/forgot_password_send",
+            "/api/user/forgot_password_confirm",
+            "/api/landlord/login",
+            "/api/landlord/forgot_password_send",
+            "/api/landlord/forgot_password_confirm"
     );
 
     @Override
@@ -52,8 +57,8 @@ public class TokenValidationFilter implements Filter {
             chain.doFilter(request, response);
             return;
         }
-        // Allow some endpoints to bypass authentication
-        if (BYPASS_URLS.contains(requestURI) || 1 == 1) {
+
+        if (BYPASS_URLS.contains(requestURI)) {
             chain.doFilter(request, response);
             return;
         }
@@ -70,12 +75,24 @@ public class TokenValidationFilter implements Filter {
             return;
         }
 
-        // Get user role from token
         int role = jwtUtil.getRoleFromToken(token);
-
-        // Check role for specific endpoint
-        if (requestURI.equals("/api/account/add") && role != 1) {
+        if ((requestURI.equals("/api/admin/add") ||
+                requestURI.equals("/api/landlord/add") ||
+                requestURI.equals("/api/admin/viewList") ||
+                requestURI.equals("/api/user/viewList") ||
+                requestURI.equals("/api/landlord/viewList") ||
+                requestURI.startsWith("/api/admin/delete") ||
+                requestURI.startsWith("/api/user/delete") ||
+                requestURI.startsWith("/api/landlord/delete") ||
+                requestURI.startsWith("/api/property/delete/")
+                ) &&
+                role != 1) {
             httpResponse.sendError(HttpServletResponse.SC_FORBIDDEN, "You do not have permission to access this resource!");
+            return;
+        }
+
+        if ((requestURI.equals("/api/property/add") && role != 2)) {
+            httpResponse.sendError(HttpServletResponse.SC_FORBIDDEN, "You do not have permission to do this action!");
             return;
         }
 

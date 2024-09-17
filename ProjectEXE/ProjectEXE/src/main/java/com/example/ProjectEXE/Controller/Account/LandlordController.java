@@ -19,12 +19,12 @@ public class LandlordController {
     @Autowired
     private final LandlordService landlordService;
 
-    @GetMapping()
+    @GetMapping("/viewList")
     public String getAllAdmin() {
         return landlordService.getAllLandlords();
     }
 
-    @PostMapping()
+    @PostMapping("/add")
     public String addAdmin(@RequestBody Landlord landlord) {
         return landlordService.addLandlord(landlord);
     }
@@ -34,7 +34,7 @@ public class LandlordController {
         return landlordService.editLandlord(editAccountDTO);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public String deleteAdmin(@PathVariable Long id) {
         return landlordService.deleteLandlord(id);
     }

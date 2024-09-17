@@ -19,7 +19,7 @@ public class UserController {
     @Autowired
     private final UserService userService;
 
-    @GetMapping()
+    @GetMapping("/viewList")
     public String getAllAUser() {
         return userService.getAllUser();
     }
@@ -43,7 +43,7 @@ public class UserController {
     public String editUser(@RequestBody EditAccountDTO editAccountDTO, HttpServletRequest request) {
         return userService.editUser(editAccountDTO, request);
     }
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public String deleteUser(@PathVariable Long id) {
         return userService.deleteUser(id);
     }

@@ -6,13 +6,17 @@ import com.example.ProjectEXE.Repository.ImageRepository;
 import com.example.ProjectEXE.Repository.PropertyRepository;
 import com.example.ProjectEXE.Service.IService.ImageService;
 import com.example.ProjectEXE.Service.ServiceImp.Utils.ImageUtil;
+import com.example.ProjectEXE.Service.ServiceImp.Utils.JwtUtil;
+import com.example.ProjectEXE.Service.ServiceImp.Utils.ResponseUtil;
 import lombok.AllArgsConstructor;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -21,13 +25,20 @@ public class ImageServiceImp implements ImageService {
 
     @Autowired
     private ImageRepository imageRepository;
-
     @Autowired
     private PropertyRepository propertyRepository;
+    @Autowired
+    private final JwtUtil jwtUtil;
+    @Autowired
+    private final ResponseUtil responseUtil;
 
     @Override
     public String uploadImage(MultipartFile file, Long propertyId) throws IOException {
         Property property = propertyRepository.findByPropertyId(propertyId);
+        if(!Objects.equals(property.getOwner().getLandlordID(), jwtUtil.getUserId())) {
+            JSONObject response = responseUtil.getErrorResponse(String.join(", ", "You do not have permission to do this action!"));
+            return response.toString();
+        }
         if (property == null) {
             return "Property Not Found";
         }

@@ -1,11 +1,13 @@
 package com.example.ProjectEXE.Service.ServiceImp;
 
 import com.example.ProjectEXE.DTO.Property.EditPropertyDTO;
+import com.example.ProjectEXE.Models.Account.Landlord;
 import com.example.ProjectEXE.Models.Property;
 import com.example.ProjectEXE.Repository.Account.LandlordRepository;
 import com.example.ProjectEXE.Repository.Account.UserRepository;
 import com.example.ProjectEXE.Repository.PropertyRepository;
 import com.example.ProjectEXE.Service.IService.PropertyService;
+import com.example.ProjectEXE.Service.ServiceImp.Utils.JwtUtil;
 import com.example.ProjectEXE.Service.ServiceImp.Utils.ResponseUtil;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @AllArgsConstructor
@@ -27,19 +30,20 @@ public class PropertyServiceImp implements PropertyService {
     private final UserRepository userRepository;
     @Autowired
     private final ResponseUtil responseUtil;
+    @Autowired
+    private final JwtUtil jwtUtil;
 
     @Override
     public String createProperty(Property property) {
-        List<String> validationResults = validateProperty(property, "add");
-        System.out.println(property.getOwner().getLandlordID());
-        if (!validationResults.isEmpty()) {
-            JSONObject response = responseUtil.getErrorResponse(String.join(", ", validationResults));
-            return response.toString();
-        } else {
-            propertyRepository.save(property);
-            JSONObject response = responseUtil.getSuccessResponse("success");
-            return new JSONObject(property).toString();
-        }
+            List<String> validationResults = validateProperty(property, "add");
+            if (!validationResults.isEmpty()) {
+                JSONObject response = responseUtil.getErrorResponse(String.join(", ", validationResults));
+                return response.toString();
+            } else {
+                propertyRepository.save(property);
+                JSONObject response = responseUtil.getSuccessResponse("success");
+                return new JSONObject(property).toString();
+            }
     }
 
     @Override
@@ -56,11 +60,15 @@ public class PropertyServiceImp implements PropertyService {
 
     @Override
     public String editProperty(EditPropertyDTO editPropertyDTO) {
+        Property property = propertyRepository.findByPropertyId(editPropertyDTO.getId());
+        if(!Objects.equals(property.getOwner().getLandlordID(), jwtUtil.getUserId())) {
+            JSONObject response = responseUtil.getErrorResponse(String.join(", ", "You do not have permission to do this action!"));
+            return response.toString();
+        }
         if (!propertyRepository.existsByPropertyId(editPropertyDTO.getId())) {
             JSONObject response = responseUtil.getErrorResponse(String.join(", ", "Property does not exist!"));
             return response.toString();
         } else {
-            Property property = propertyRepository.findByPropertyId(editPropertyDTO.getId());
             property.setOwner(editPropertyDTO.getOwner());
             property.setDescription(editPropertyDTO.getDescription());
             property.setMonthlyRent(editPropertyDTO.getMonthlyRent());

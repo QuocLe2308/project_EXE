@@ -21,6 +21,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 
 @Service
@@ -37,7 +38,7 @@ public class LandlordServiceImp implements LandlordService {
 
     @Override
     public String getAllLandlords() {
-        List<Landlord> landlords = landlordRepository.findAll();
+        List<Landlord> landlords = landlordRepository.findAllByisDisableFalse();
         landlords.forEach(landlord -> landlord.setPasswordHash(""));
         if (landlords.isEmpty()) {
             JSONObject errorResponse = responseUtil.getErrorResponse("Not Have Account!");
@@ -97,13 +98,18 @@ public class LandlordServiceImp implements LandlordService {
             JSONObject response = responseUtil.getErrorResponse(String.join(", ", "Landlord does not exist!"));
             return response.toString();
         } else {
-            Landlord landlord = landlordRepository.findByLandlordID(editAccountDTO.getId());
-            landlord.setFullName(editAccountDTO.getFullName());
-            landlord.setPhoneNumber(editAccountDTO.getPhoneNumber());
-            landlord.setAddress(editAccountDTO.getAddress());
-            landlordRepository.save(landlord);
-            JSONObject response = responseUtil.getSuccessResponse("success");
-            return new JSONObject(landlord).toString();
+            if(!Objects.equals(editAccountDTO.getId(), jwtUtil.getUserId())){
+                JSONObject response = responseUtil.getErrorResponse(String.join(", ", "Invalid user operation!"));
+                return response.toString();
+            }else {
+                Landlord landlord = landlordRepository.findByLandlordID(editAccountDTO.getId());
+                landlord.setFullName(editAccountDTO.getFullName());
+                landlord.setPhoneNumber(editAccountDTO.getPhoneNumber());
+                landlord.setAddress(editAccountDTO.getAddress());
+                landlordRepository.save(landlord);
+                JSONObject response = responseUtil.getSuccessResponse("success");
+                return new JSONObject(landlord).toString();
+            }
         }
     }
     @Override
@@ -113,7 +119,8 @@ public class LandlordServiceImp implements LandlordService {
             JSONObject response = responseUtil.getErrorResponse("Landlord does not exist");
             return response.toString();
         } else {
-            landlordRepository.deleteByLandlordID(id);
+            Landlord landlord = landlordRepository.findByLandlordID(id);
+            landlord.setDisable(true);
             JSONObject response = responseUtil.getSuccessResponse("Delete Successfully!");
             return response.toString();
         }
