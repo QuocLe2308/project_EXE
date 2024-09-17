@@ -22,7 +22,7 @@ public class PropertyController {
         return propertyService.getAllProperty();
     }
 
-    @PostMapping()
+    @PostMapping("/add")
     public String createProperty(@RequestBody Property property) {
         return propertyService.createProperty(property);
     }

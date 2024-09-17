@@ -4,6 +4,8 @@ import com.example.ProjectEXE.Models.Account.Admin;
 import com.example.ProjectEXE.Models.Account.Landlord;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
+
 public interface LandlordRepository extends JpaRepository<Landlord, Long> {
 
     Landlord findByUserName(String username);
@@ -12,6 +14,6 @@ public interface LandlordRepository extends JpaRepository<Landlord, Long> {
     boolean existsByEmail(String email);
     boolean existsByUserName(String username);
     boolean existsByLandlordID(Long landlordId);
-    void deleteByLandlordID(Long landlordId);
+    List<Landlord> findAllByisDisableFalse();
 
 }

@@ -18,6 +18,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 
 @Service
@@ -34,7 +35,7 @@ public class UserServiceImp implements UserService {
 
     @Override
     public String getAllUser() {
-        List<User> users = userRepository.findAll();
+        List<User> users = userRepository.findAllByisDisableFalse();
         users.forEach(user -> user.setPasswordHash(""));
         if (users.isEmpty()) {
             JSONObject errorResponse = responseUtil.getErrorResponse("Not Have Account!");
@@ -136,7 +137,8 @@ public class UserServiceImp implements UserService {
             JSONObject response = responseUtil.getErrorResponse("User does not exist");
             return response.toString();
         } else {
-            userRepository.deleteByUserID(id);
+            User user = userRepository.findByUserID(id);
+            user.setDisable(true);
             JSONObject response = responseUtil.getSuccessResponse("Delete Successfully!");
             return response.toString();
         }
@@ -149,14 +151,19 @@ public class UserServiceImp implements UserService {
             JSONObject response = responseUtil.getErrorResponse(String.join(", ", validationResults));
             return response.toString();
         } else {
-            User user = userRepository.findByUserID(editAccountDTO.getId());
-            user.setFullName(editAccountDTO.getFullName());
-            user.setPhoneNumber(editAccountDTO.getPhoneNumber());
-            user.setAddress(editAccountDTO.getAddress());
-            user.onUpdate();
-            userRepository.save(user);
-            JSONObject errorResponse = responseUtil.getSuccessResponse("Edit success!");
-            return new JSONObject(user).toString();
+            if(!Objects.equals(editAccountDTO.getId(), jwtUtil.getUserId())){
+                JSONObject response = responseUtil.getErrorResponse(String.join(", ", "Invalid user operation!"));
+                return response.toString();
+            }else {
+                User user = userRepository.findByUserID(editAccountDTO.getId());
+                user.setFullName(editAccountDTO.getFullName());
+                user.setPhoneNumber(editAccountDTO.getPhoneNumber());
+                user.setAddress(editAccountDTO.getAddress());
+                user.onUpdate();
+                userRepository.save(user);
+                JSONObject errorResponse = responseUtil.getSuccessResponse("Edit success!");
+                return new JSONObject(user).toString();
+            }
         }
 
     }

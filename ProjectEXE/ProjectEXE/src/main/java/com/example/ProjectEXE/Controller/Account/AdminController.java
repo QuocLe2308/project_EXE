@@ -19,13 +19,18 @@ public class AdminController {
 
     @Autowired
     private final AdminService adminService;
+//    @GetMapping()
+//    public String gettest() {
+//        return adminService.getInfoUser().toString();
+//    }
 
-    @GetMapping()
+
+    @GetMapping("/viewList")
     public String getAllAdmin() {
         return adminService.getAllAdmins();
     }
 
-    @PostMapping()
+    @PostMapping("/add")
     public String addAdmin(@RequestBody Admin Admin) {
         return adminService.addAdmin(Admin);
     }
@@ -35,7 +40,7 @@ public class AdminController {
         return adminService.editAdmin(editAccountDTO);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public String deleteAdmin(@PathVariable Long id) {
         return adminService.deleteAdmin(id);
     }
