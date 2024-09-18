@@ -5,9 +5,11 @@ import com.example.ProjectEXE.Models.Property;
 import com.example.ProjectEXE.Service.IService.PropertyService;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/property")
@@ -50,5 +52,10 @@ public class PropertyController {
     @GetMapping("/asc")
     public List<Property> getAscProperty() {
         return propertyService.sortByPriceLowToHigh();
+    }
+
+    @GetMapping("/getCombine")
+    public String getTwoJson(){
+        return propertyService.getCombinedData();
     }
 }

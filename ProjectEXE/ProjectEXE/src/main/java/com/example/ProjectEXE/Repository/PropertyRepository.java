@@ -7,11 +7,9 @@ import java.util.List;
 
 public interface PropertyRepository extends JpaRepository<Property, Long> {
     boolean existsByPropertyId(Long propertyId);
-
     Property findByPropertyId(Long propertyId);
     void deleteByPropertyId(Long propertyId);
     List<Property> findAllByOrderByMonthlyRentDesc();
-
     List<Property> findAllByOrderByMonthlyRentAsc();
 
 }

@@ -1,10 +1,13 @@
 package com.example.ProjectEXE.Service.ServiceImp;
 
+import com.example.ProjectEXE.DTO.CombineDTO.ImageAndProperty.CombineImageAndPropertyDTO;
 import com.example.ProjectEXE.DTO.Property.EditPropertyDTO;
 import com.example.ProjectEXE.Models.Account.Landlord;
+import com.example.ProjectEXE.Models.Image;
 import com.example.ProjectEXE.Models.Property;
 import com.example.ProjectEXE.Repository.Account.LandlordRepository;
 import com.example.ProjectEXE.Repository.Account.UserRepository;
+import com.example.ProjectEXE.Repository.ImageRepository;
 import com.example.ProjectEXE.Repository.PropertyRepository;
 import com.example.ProjectEXE.Service.IService.PropertyService;
 import com.example.ProjectEXE.Service.ServiceImp.Utils.JwtUtil;
@@ -18,6 +21,8 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -32,6 +37,8 @@ public class PropertyServiceImp implements PropertyService {
     private final ResponseUtil responseUtil;
     @Autowired
     private final JwtUtil jwtUtil;
+    @Autowired
+    private final ImageRepository imageRepository;
 
     @Override
     public String createProperty(Property property) {
@@ -147,4 +154,25 @@ public class PropertyServiceImp implements PropertyService {
     public List<Property> sortByPriceLowToHigh(){
         return propertyRepository.findAllByOrderByMonthlyRentAsc();
     }
+
+    @Override
+    public String getCombinedData() {
+        List<Image> images = imageRepository.findAll();
+        List<Property> properties = propertyRepository.findAll();
+
+        Set<Long> propertyIds = images.stream()
+                .map(image -> image.getProperty().getPropertyId())
+                .collect(Collectors.toSet());
+
+        List<Property> filteredProperties = properties.stream()
+                .filter(property -> propertyIds.contains(property.getPropertyId()))
+                .collect(Collectors.toList());
+
+        CombineImageAndPropertyDTO combineImageAndPropertyDTO = new CombineImageAndPropertyDTO();
+        combineImageAndPropertyDTO.setImage(images);
+        combineImageAndPropertyDTO.setProperty(filteredProperties);
+
+        return new JSONObject(combineImageAndPropertyDTO).toString();
+    }
+
 }
