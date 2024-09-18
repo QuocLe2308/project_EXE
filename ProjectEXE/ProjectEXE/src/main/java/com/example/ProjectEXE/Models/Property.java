@@ -45,6 +45,12 @@ public class Property {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @Column(name = "latitude", nullable = false)
+    private Double latitude;
+
+    @Column(name = "longitude", nullable = false)
+    private Double longitude;
+
     @Column(name = "created_at")
     @Convert(converter = LocalDateTimeToIntegerConverter.class)
     private LocalDateTime createdAt;
@@ -55,7 +61,6 @@ public class Property {
 
     @Column(name = "is_disable", nullable = false, columnDefinition = "TINYINT(1) default 0")
     private boolean isDisable;
-
 
     @PrePersist
     protected void onCreate() {

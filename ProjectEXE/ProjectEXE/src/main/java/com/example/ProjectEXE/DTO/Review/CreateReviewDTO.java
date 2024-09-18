@@ -9,8 +9,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class EditReviewDTO {
-    private Long id;
-    private String comments;
+public class CreateReviewDTO {
     private Property property;
+    private String comment;
 }
