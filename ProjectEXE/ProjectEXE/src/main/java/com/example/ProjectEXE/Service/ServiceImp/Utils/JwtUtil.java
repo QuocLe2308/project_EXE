@@ -72,7 +72,7 @@ public class JwtUtil {
     public int getRoleFromToken(String token) {
         return (int) getClaimsFromToken(token).get("role");
     }
-    // Kiểm tra JWT có hợp lệ không
+
     public boolean validateToken(String token) {
         try {
             Jwts.parser().setSigningKey(secret).parseClaimsJws(token);

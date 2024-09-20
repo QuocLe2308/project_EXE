@@ -48,6 +48,7 @@ public class LandlordServiceImp implements LandlordService {
             return new JSONObject(successResponse).toString() ;
         }
     }
+
     @Override
     public String loginLandlord(LoginDTO loginDTO, HttpServletRequest request) {
         if (loginDTO.getCaptcha().equals(request.getSession().getAttribute("captcha"))) {
@@ -78,6 +79,7 @@ public class LandlordServiceImp implements LandlordService {
             return errorResponse.toString();
         }
     }
+
     @Override
     public String addLandlord(Landlord landlord) {
         List<String> validationResults = validateLandlord(landlord, "add");
@@ -92,6 +94,7 @@ public class LandlordServiceImp implements LandlordService {
             return new JSONObject(landlord).toString()  ;
         }
     }
+
     @Override
     public String editLandlord(EditAccountDTO editAccountDTO) {
         if (!landlordRepository.existsByLandlordID(editAccountDTO.getId())) {
@@ -112,6 +115,7 @@ public class LandlordServiceImp implements LandlordService {
             }
         }
     }
+
     @Override
     @Transactional
     public String deleteLandlord(Long id) {
@@ -125,6 +129,7 @@ public class LandlordServiceImp implements LandlordService {
             return response.toString();
         }
     }
+
     @Override
     public String forgotPasswordLandlordSend(ForgotPasswordAccountDTO forgotPasswordAccountDTO, HttpServletRequest request) {
         if (!landlordRepository.existsByEmail(forgotPasswordAccountDTO.getEmail())) {
@@ -140,6 +145,7 @@ public class LandlordServiceImp implements LandlordService {
             return response.toString();
         }
     }
+
     @Override
     public String forgotPasswordLandlordConfirm(ForgotPasswordAccountDTO forgotPasswordAccountDTO, HttpServletRequest request) {
         if (forgotPasswordAccountDTO.getOtp().equals(request.getSession().getAttribute("code_forgot"))) {
@@ -163,6 +169,7 @@ public class LandlordServiceImp implements LandlordService {
             return response.toString();
         }
     }
+
     @Override
     public String changePasswordLandlord(ChangePasswordAccountDTO changePasswordAccountDTO) {
         Landlord landlord = landlordRepository.findByLandlordID(jwtUtil.getUserId());
@@ -181,12 +188,14 @@ public class LandlordServiceImp implements LandlordService {
             return response.toString();
         }
     }
+
     @Override
     public Landlord getInfoUser() {
         Landlord landlord = landlordRepository.findByLandlordID(jwtUtil.getUserId());
         landlord.setPasswordHash("");
         return landlord;
     }
+
     @Override
     public List<String> validateLandlord(Landlord landlord, String type) {
 
