@@ -55,7 +55,6 @@ public class UserServiceImp implements UserService {
                     if (hashPassword.matches(user.getPasswordHash())) {
                         String token = "";
                             token = jwtUtil.generateToken(loginDTO.getUsername(), user.getUserID(), 3);
-                            System.out.println(token);
                         JSONObject response = responseUtil.getResponseLogin("success", token, "Login success!");
                         return response.toString();
                     } else {
@@ -104,8 +103,6 @@ public class UserServiceImp implements UserService {
         String otp = registerConfirmDTO.getOtp();
         if (otp.equals(request.getSession().getAttribute("code_register"))) {
             User user = registerConfirmDTO.toUser();
-            System.out.println(user.getUserName());
-            System.out.println(request.getSession().getAttribute("email_register")+" day la email ben confirm: "+user.getEmail());
             List<String> validationResults = validateUser(user, "add");
             if (!validationResults.isEmpty()) {JSONObject response = responseUtil.getErrorResponse(String.join(", ", validationResults));
                 return response.toString();
@@ -192,9 +189,7 @@ public class UserServiceImp implements UserService {
 
     @Override
     public List<String> validateUser(User user, String type) {
-
         List<String> errors = new ArrayList<>();
-
         if (type.equals("edit") && userRepository.existsById(user.getUserID())) {
             errors.add("UserID does not exist");
         }

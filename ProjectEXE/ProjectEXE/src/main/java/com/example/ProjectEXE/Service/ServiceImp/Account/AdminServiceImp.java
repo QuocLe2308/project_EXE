@@ -218,8 +218,8 @@ public class AdminServiceImp implements AdminService {
         }
         return errors;
     }
+
     @Override
-    // function to hash password
     public String hashString(String input) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
