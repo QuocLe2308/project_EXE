@@ -38,7 +38,7 @@ public class User {
     private String address;
 
     @Column(name = "role", nullable = false)
-    private int role;
+    private Integer role;
 
     @Column(name = "is_disable", columnDefinition = "TINYINT(1) default 0")
     private boolean isDisable;

@@ -1,4 +1,4 @@
-package com.example.ProjectEXE.DTO.CombineDTO.ImageAndProperty;
+package com.example.ProjectEXE.DTO.CombineDTO;
 
 import com.example.ProjectEXE.Models.Image;
 import com.example.ProjectEXE.Models.Property;

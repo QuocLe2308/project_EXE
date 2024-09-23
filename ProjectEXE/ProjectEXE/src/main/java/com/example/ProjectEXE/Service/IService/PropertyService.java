@@ -1,6 +1,5 @@
 package com.example.ProjectEXE.Service.IService;
 
-import com.example.ProjectEXE.DTO.CombineDTO.ImageAndProperty.CombineImageAndPropertyDTO;
 import com.example.ProjectEXE.DTO.Property.EditPropertyDTO;
 import com.example.ProjectEXE.Models.Property;
 
