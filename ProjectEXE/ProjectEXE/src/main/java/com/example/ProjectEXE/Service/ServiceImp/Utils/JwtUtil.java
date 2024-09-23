@@ -81,4 +81,11 @@ public class JwtUtil {
             return false;
         }
     }
+
+    public int getRole() {
+        HttpServletRequest httpRequest = request;
+        String authorizationHeader = httpRequest.getHeader("Authorization");
+        String token = authorizationHeader.substring(7); // Bỏ qua phần "Bearer "
+        return getRoleFromToken(token);
+    }
 }

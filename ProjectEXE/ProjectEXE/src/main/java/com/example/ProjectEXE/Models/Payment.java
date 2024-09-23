@@ -43,9 +43,11 @@ public class Payment {
     private String paymentMethod;
 
     @Column(name = "payment_status", nullable = false)
-    private String paymentStatus = "Completed";
+    private Integer paymentStatus;
 
-    @Lob
+    @Column(name = "content")
+    private String content;
+
     @Column(name = "qr_data")
     private String qrData;
 
