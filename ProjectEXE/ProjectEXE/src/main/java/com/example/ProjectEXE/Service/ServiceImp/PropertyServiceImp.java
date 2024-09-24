@@ -1,7 +1,9 @@
 package com.example.ProjectEXE.Service.ServiceImp;
 
+import com.example.ProjectEXE.Config.GoogleApiConfig;
 import com.example.ProjectEXE.DTO.CombineDTO.CombineImageAndPropertyDTO;
 import com.example.ProjectEXE.DTO.Property.EditPropertyDTO;
+import com.example.ProjectEXE.DTO.Property.GetLocationPropertyDTO;
 import com.example.ProjectEXE.Models.Image;
 import com.example.ProjectEXE.Models.Property;
 import com.example.ProjectEXE.Repository.Account.LandlordRepository;
@@ -13,9 +15,14 @@ import com.example.ProjectEXE.Service.ServiceImp.Utils.JwtUtil;
 import com.example.ProjectEXE.Service.ServiceImp.Utils.ResponseUtil;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import lombok.Value;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,14 +45,28 @@ public class PropertyServiceImp implements PropertyService {
     private final JwtUtil jwtUtil;
     @Autowired
     private final ImageRepository imageRepository;
+    @Autowired
+    private final RestTemplate restTemplate;
+
+    private final String googleDistanceMatrixUrl = "https://maps.googleapis.com/maps/api/distancematrix/json";
+
+    @Autowired
+    private GoogleApiConfig googleApiConfig;
 
     @Override
     public String createProperty(Property property) {
+            int role = jwtUtil.getRole();
+        if(role!=2) {
+            JSONObject response = responseUtil.getErrorResponse(String.join(", ", "You do not have permission to do this action!"));
+            return response.toString();
+        }
             List<String> validationResults = validateProperty(property, "add");
             if (!validationResults.isEmpty()) {
                 JSONObject response = responseUtil.getErrorResponse(String.join(", ", validationResults));
                 return response.toString();
             } else {
+                property.setOwner(landlordRepository.findByLandlordID(jwtUtil.getUserId()));
+                property.setUser(null);
                 propertyRepository.save(property);
                 JSONObject response = responseUtil.getSuccessResponse("success");
                 return new JSONObject(property).toString();
@@ -130,12 +151,15 @@ public class PropertyServiceImp implements PropertyService {
         if (property.getMaxTenants() == null || property.getMaxTenants() <= 0) {
             errors.add("Please enter a valid MaxTenants");
         }
+        if (property.getLatitude() == null || property.getLongitude() == null) {
+            errors.add("Please enter a valid Latitude");
+        }
         if (property.getMonthlyRent() == null || property.getMonthlyRent() <= 0) {
             errors.add("Please enter a valid MonthlyRent");
         }
-        if (property.getOwner() == null || !landlordRepository.existsByLandlordID(property.getOwner().getLandlordID())) {
+        /*if (property.getOwner() == null || !landlordRepository.existsByLandlordID(property.getOwner().getLandlordID())) {
             errors.add("Please enter a valid Owner");
-        }
+        }*/
         if (property.getUser() != null) {
             if (!userRepository.existsById(property.getUser().getUserID())) {
                 errors.add("Please enter a valid User");
@@ -174,4 +198,65 @@ public class PropertyServiceImp implements PropertyService {
         return new JSONObject(combineImageAndPropertyDTO).toString();
     }
 
+    /*@Override
+    public List<Property> findNearbyProperties(GetLocationPropertyDTO getLocationPropertyDTO) {
+        List<Property> property = propertyRepository.findNearbyProperties(
+                getLocationPropertyDTO.getLatitude(),
+                getLocationPropertyDTO.getLongitude(),
+                getLocationPropertyDTO.getDistance());
+        );
+    }*/
+
+//    @Override
+//    public Property getDetailOfPropertyForDistance(Long id) {
+//        return propertyRepository.findById(id).orElse(null);
+//    }
+//
+//
+    /*@Override
+    public List<Property> findNearbyProperties(double userLatitude, double userLongitude, double distance) {
+        List<Property> allProperties = getAllProperties(); // Phương thức giả định để lấy tất cả bất động sản
+        List<Property> nearbyProperties = new ArrayList<>();
+
+        for (Property property : allProperties) {
+            double propertyLatitude = property.getLatitude(); // Thay thế bằng phương thức để lấy latitude
+            double propertyLongitude = property.getLongitude(); // Thay thế bằng phương thức để lấy longitude
+
+            double propertyDistance = getDistanceBetweenUserAndProperty(userLatitude, userLongitude, propertyLatitude, propertyLongitude);
+
+            if (propertyDistance <= distance) {
+                nearbyProperties.add(property);
+            }
+        }
+        return nearbyProperties;
+    }
+
+    @Override
+    public double getDistanceBetweenUserAndProperty(double userLatitude, double userLongitude, double propertyLatitude, double propertyLongitude) {
+        String url = String.format("%s?origins=%f,%f&destinations=%f,%f&key=%s", googleDistanceMatrixUrl, userLatitude, userLongitude, propertyLatitude, propertyLongitude, googleApiConfig.getKey());
+
+        RestTemplate restTemplate = new RestTemplate();
+        String jsonResponse = restTemplate.getForObject(url, String.class);
+
+        JSONObject json = new JSONObject(jsonResponse);
+        JSONArray rows = json.getJSONArray("rows");
+
+        if (rows.length() > 0) {
+            JSONArray elements = rows.getJSONObject(0).getJSONArray("elements");
+            if (elements.length() > 0) {
+                double distanceInMeters = elements.getJSONObject(0).getJSONObject("distance").getDouble("value");
+                return distanceInMeters / 1000.0; // Trả về khoảng cách tính theo km
+            } else {
+                throw new RuntimeException("No elements found in the response.");
+            }
+        } else {
+            throw new RuntimeException("No rows found in the response.");
+        }
+    }*/
+    @Override
+    public List<Property> getPropertiesWithinDistance(double userLatitude, double userLongitude, double distance) {
+        return propertyRepository.findPropertiesWithinDistance(userLatitude, userLongitude, distance);
+    }
+
 }
+

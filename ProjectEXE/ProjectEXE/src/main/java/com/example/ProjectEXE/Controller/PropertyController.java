@@ -1,15 +1,14 @@
 package com.example.ProjectEXE.Controller;
 
 import com.example.ProjectEXE.DTO.Property.EditPropertyDTO;
+import com.example.ProjectEXE.DTO.Property.GetLocationPropertyDTO;
 import com.example.ProjectEXE.Models.Property;
 import com.example.ProjectEXE.Service.IService.PropertyService;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/property")
@@ -58,4 +57,39 @@ public class PropertyController {
     public String getTwoJson(){
         return propertyService.getCombinedData();
     }
+
+    @PostMapping("/nearby")
+    public List<Property> getNearbyProperties(@RequestBody GetLocationPropertyDTO getLocationPropertyDTO) {
+
+        List<Property> properties = propertyService.getPropertiesWithinDistance(
+                getLocationPropertyDTO.getLatitude(),
+                getLocationPropertyDTO.getLongitude(),
+                getLocationPropertyDTO.getDistance());
+
+        return properties;
+    }
+
+    /*@PostMapping("/nearby")
+    public List<Property> getNearbyProperties(
+            @RequestBody double latitude,
+            @RequestBody double longitude,
+            @RequestBody double distance) {
+        return propertyService.findNearbyProperties(latitude, longitude, distance);
+    }*/
+
+//    @PostMapping("/distance")
+//    public ResponseEntity<String> getDistanceBetweenUserAndProperty(
+//            @RequestBody GetLocationPropertyDTO getLocationPropertyDTO, ) {
+//        Property property = propertyService.getDetailOfPropertyForDistance(propertyId);
+//        if (property == null) {
+//            return ResponseEntity.status(404).body("Property not found");
+//        }
+//
+//        double distance = propertyService.getDistanceBetweenUserAndProperty(userLat, userLng, property);
+//        JSONObject response = new JSONObject();
+//        response.put("distance", distance);
+//        response.put("unit", "km");
+//
+//        return ResponseEntity.ok(response.toString());
+//    }
 }

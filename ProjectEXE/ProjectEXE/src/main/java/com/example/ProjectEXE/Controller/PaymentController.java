@@ -35,7 +35,7 @@ public class PaymentController {
         return paymentService.addPayment(payment);
     }
 
-    @PutMapping()
+    @PutMapping("/edit")
     public String update(@RequestBody Payment payment){
         return paymentService.editPayment(payment);
     }
@@ -45,8 +45,8 @@ public class PaymentController {
         return paymentService.deletePayment(id);
     }
 
-    @GetMapping("/getQrBank")
-    public String getQrBank(@RequestBody GetQrBankPaymentDTO getQrBankPaymentDTO){
-        return paymentService.getQrBank(getQrBankPaymentDTO);
+    @GetMapping("/getQrBank/{id}")
+    public String getQrBank(@PathVariable Long id){
+        return paymentService.getQrBank(id);
     }
 }
