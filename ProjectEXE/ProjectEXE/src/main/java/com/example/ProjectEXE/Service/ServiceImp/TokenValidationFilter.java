@@ -81,6 +81,8 @@ public class TokenValidationFilter implements Filter {
                 requestURI.equals("/api/admin/viewList") ||
                 requestURI.equals("/api/user/viewList") ||
                 requestURI.equals("/api/landlord/viewList") ||
+                requestURI.equals("/api/payment/viewList") ||
+                requestURI.equals("/api/payment/edit") ||
                 requestURI.startsWith("/api/admin/delete") ||
                 requestURI.startsWith("/api/user/delete") ||
                 requestURI.startsWith("/api/landlord/delete") ||

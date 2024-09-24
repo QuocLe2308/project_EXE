@@ -14,5 +14,5 @@ public interface PaymentService {
     public String editPayment(Payment payment);
     public String deletePayment(Long id);
     public List<String> validatePayment(Payment payment, String type);
-    public String getQrBank(GetQrBankPaymentDTO getQrBankPaymentDTO);
+    public String getQrBank(Long paymentID);
 }

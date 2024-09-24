@@ -32,6 +32,11 @@ public class ImageServiceImp implements ImageService {
 
     @Override
     public String uploadImage(MultipartFile file, Long propertyId) throws IOException {
+        int role = jwtUtil.getRole();
+        if(role!=2) {
+            JSONObject response = responseUtil.getErrorResponse(String.join(", ", "You do not have permission to do this action!"));
+            return response.toString();
+        }
         Property property = propertyRepository.findByPropertyId(propertyId);
         if(!Objects.equals(property.getOwner().getLandlordID(), jwtUtil.getUserId())) {
             JSONObject response = responseUtil.getErrorResponse(String.join(", ", "You do not have permission to do this action!"));

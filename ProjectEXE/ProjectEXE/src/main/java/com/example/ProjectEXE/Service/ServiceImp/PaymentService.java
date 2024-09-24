@@ -2,13 +2,16 @@ package com.example.ProjectEXE.Service.ServiceImp;
 
 import com.example.ProjectEXE.DTO.PaymentDTO.GetQrBankPaymentDTO;
 import com.example.ProjectEXE.Models.Payment;
+import com.example.ProjectEXE.Models.Property;
 import com.example.ProjectEXE.Repository.Account.UserRepository;
 import com.example.ProjectEXE.Repository.PaymentRepository;
+import com.example.ProjectEXE.Repository.PropertyRepository;
 import com.example.ProjectEXE.Service.ServiceImp.Utils.JwtUtil;
 import com.example.ProjectEXE.Service.ServiceImp.Utils.ResponseUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.apache.http.HttpEntity;
 import org.springframework.web.client.RestTemplate;
@@ -40,6 +43,8 @@ public class PaymentService implements com.example.ProjectEXE.Service.IService.P
     private final UserRepository userRepository;
     @Autowired
     private final RestTemplate restTemplate;
+    @Autowired
+    private final PropertyRepository propertyRepository;
 
     @Override
     public String getAllPayment() {
@@ -73,15 +78,26 @@ public class PaymentService implements com.example.ProjectEXE.Service.IService.P
 
     @Override
     public String addPayment(Payment payment) {
-        paymentRepository.save(payment);
-        JSONObject successResponse = responseUtil.getSuccessResponse("Success!", payment);
-        return successResponse.toString();
-
+        Property existingProperty = propertyRepository.findByPropertyId(payment.getProperty().getPropertyId());
+        if (existingProperty != null) {
+            payment.setUser(userRepository.findByUserID(jwtUtil.getUserId()));
+            payment.setProperty(existingProperty);
+            paymentRepository.save(payment);
+            JSONObject successResponse = responseUtil.getSuccessResponse("Success!", payment);
+            return successResponse.toString();
+        }else{
+            JSONObject errorResponse = responseUtil.getErrorResponse("No Have Payment");
+            return errorResponse.toString();
+        }
     }
 
     @Override
     public String editPayment(Payment payment) {
         List<String> validationResults = validatePayment(payment, "edit");
+        if (payment.getUser() == null) {
+            Payment payment1 = paymentRepository.findByPaymentID(payment.getPaymentID());
+            payment.setUser(payment1.getUser());
+        }
         if (!validationResults.isEmpty()) {
             JSONObject response = responseUtil.getErrorResponse(String.join(", ", validationResults));
             return response.toString();
@@ -114,24 +130,24 @@ public class PaymentService implements com.example.ProjectEXE.Service.IService.P
         if (payment.getContent() == null || payment.getContent().isEmpty()) {
             errors.add("Please enter a Content");
         }
-        if (payment.getUser().getUserID() == null) {
+        /*if (payment.getUser().getUserID() == null) {
             errors.add("Please enter User ID");
-        }
+        }*/
         if (payment.getAmount() == null) {
             errors.add("Please enter Amount to Pay");
         }
         if (payment.getPaymentStatus() == null) {
             errors.add("Please enter Status");
         }
-        if (payment.getQrData() == null || payment.getQrData().isEmpty()) {
+        /*if (payment.getQrData() == null || payment.getQrData().isEmpty()) {
             errors.add("Please enter QR Data");
-        }
+        }*/
         /*if (payment.getPaid_at() == null) {
             errors.add("Please enter Paid At");
         }*/
-        if (payment.getCreatedAt() == null) {
+        /*if (payment.getCreatedAt() == null) {
             errors.add("Please enter Created At");
-        }
+        }*/
         if (type.equals("add") && paymentRepository.existsById(payment.getPaymentID())) {
             errors.add("Payment ID already exists");
         }
@@ -140,7 +156,8 @@ public class PaymentService implements com.example.ProjectEXE.Service.IService.P
     }
 
     @Override
-    public String getQrBank(GetQrBankPaymentDTO getQrBankPaymentDTO) {
+    public String getQrBank(Long paymentID) {
+        Payment payments = paymentRepository.findByPaymentID(paymentID);
         HttpClient httpClient = HttpClients.createDefault();
         HttpPost httpPost = new HttpPost("https://api.vietqr.io/v2/generate");
 
@@ -150,10 +167,10 @@ public class PaymentService implements com.example.ProjectEXE.Service.IService.P
         jsonPayload.put("accountNo", "0791000055332");
         jsonPayload.put("accountName", "Le Tan Quoc");
         jsonPayload.put("acqId", 970436);
-        jsonPayload.put("amount", getQrBankPaymentDTO.getMoney());
-        jsonPayload.put("addInfo", "PAY_" + getQrBankPaymentDTO.getId() + "_CSSK");
+        jsonPayload.put("amount", payments.getAmount());
+        jsonPayload.put("addInfo", "PAY_" + payments.getPaymentID() + "_CSSK");
         jsonPayload.put("format", "text");
-        jsonPayload.put("template", "PAY_" + getQrBankPaymentDTO.getId() + "_CSSK");
+        jsonPayload.put("template", "PAY_" + payments.getPaymentID() + "_CSSK");
 
         String qrDataURL = null;
         try {
