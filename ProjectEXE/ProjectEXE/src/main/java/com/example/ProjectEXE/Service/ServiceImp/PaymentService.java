@@ -78,11 +78,23 @@ public class PaymentService implements com.example.ProjectEXE.Service.IService.P
 
     @Override
     public String addPayment(Payment payment) {
+        Double price = 0.0;
         Property existingProperty = propertyRepository.findByPropertyId(payment.getProperty().getPropertyId());
         if (existingProperty != null) {
+            if (existingProperty.getMonthlyRent() < 2000000) {
+                price = (double) Math.round(existingProperty.getMonthlyRent() * 0.18);
+            }
+            if (existingProperty.getMonthlyRent() >= 2000000 && existingProperty.getMonthlyRent() <= 5000000){
+                price = (double) Math.round(existingProperty.getMonthlyRent() * 0.22);
+            }
+            if (existingProperty.getMonthlyRent() > 5000000){
+                price = (double) Math.round(existingProperty.getMonthlyRent() * 0.28);
+            }
+            payment.setAmount(price);
             payment.setUser(userRepository.findByUserID(jwtUtil.getUserId()));
             payment.setProperty(existingProperty);
             paymentRepository.save(payment);
+
             JSONObject successResponse = responseUtil.getSuccessResponse("Success!", payment);
             return successResponse.toString();
         }else{
@@ -176,10 +188,8 @@ public class PaymentService implements com.example.ProjectEXE.Service.IService.P
         try {
             StringEntity entity = new StringEntity(jsonPayload.toString());
             httpPost.setEntity(entity);
-
             HttpResponse response = httpClient.execute(httpPost);
             HttpEntity responseEntity = response.getEntity();
-
             if (responseEntity != null) {
                 String jsonResponse = EntityUtils.toString(responseEntity);
                 JSONObject jsonObject = new JSONObject(jsonResponse);
@@ -233,6 +243,9 @@ public class PaymentService implements com.example.ProjectEXE.Service.IService.P
         }
 
         if (status == 1) {
+            Property property = propertyRepository.findByPropertyId(payment.getProperty().getPropertyId());
+            property.setUser(userRepository.findByUserID(payment.getUser().getUserID()));
+            propertyRepository.save(property);
             return responseUtil.getSuccessResponse("Bill " + payment.getPaymentID() + " Paid", null).toString();
         } else {
             return responseUtil.getResponse("error", payment.getQrData(), null).toString();
