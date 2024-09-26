@@ -66,7 +66,6 @@ public class PropertyServiceImp implements PropertyService {
                 return response.toString();
             } else {
                 property.setOwner(landlordRepository.findByLandlordID(jwtUtil.getUserId()));
-                property.setUser(null);
                 propertyRepository.save(property);
                 JSONObject response = responseUtil.getSuccessResponse("success");
                 return new JSONObject(property).toString();
