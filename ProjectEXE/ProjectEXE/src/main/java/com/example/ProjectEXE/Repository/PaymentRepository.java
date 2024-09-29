@@ -9,4 +9,5 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
     List<Payment> findAllByUserUserID(long id);
     Payment findByPaymentID(long id);
+    List<Payment> findAllByProperty_Owner_LandlordID(Long landlordId);
 }

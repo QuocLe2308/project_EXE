@@ -1,6 +1,5 @@
 package com.example.ProjectEXE.Service.ServiceImp;
 
-import com.example.ProjectEXE.DTO.PaymentDTO.GetQrBankPaymentDTO;
 import com.example.ProjectEXE.Models.Payment;
 import com.example.ProjectEXE.Models.Property;
 import com.example.ProjectEXE.Repository.Account.UserRepository;
@@ -11,9 +10,9 @@ import com.example.ProjectEXE.Service.ServiceImp.Utils.ResponseUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.apache.http.HttpEntity;
+import org.json.JSONArray;
 import org.springframework.web.client.RestTemplate;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -25,6 +24,7 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.io.IOException;
+import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,8 +46,44 @@ public class PaymentService implements com.example.ProjectEXE.Service.IService.P
     @Autowired
     private final PropertyRepository propertyRepository;
 
+
     @Override
     public String getAllPayment() {
+        if (jwtUtil.getRole() != 1) {
+            JSONObject response = responseUtil.getErrorResponse("You do not have permission to do this action!");
+            return response.toString();
+        } else {
+            List<Payment> payments = paymentRepository.findAll();
+
+            if (payments.isEmpty()) {
+                JSONObject response = responseUtil.getErrorResponse("No payments found.");
+                return response.toString();
+            } else {
+                JSONArray paymentArray = new JSONArray();
+                for (Payment payment : payments) {
+                    paymentArray.put(new JSONObject(payment)); // Convert each payment to JSON
+                }
+                JSONObject successResponse = responseUtil.getSuccessResponse("Payments retrieved successfully", paymentArray);
+                return successResponse.toString();
+            }
+        }
+    }
+
+    @Override
+    public List<Payment> getPaymentsByLandlordId() throws AccessDeniedException {
+        if (jwtUtil.getRole() != 2) {
+            JSONObject response = responseUtil.getErrorResponse("You do not have permission to do this action!");
+            throw new AccessDeniedException(response.toString());
+        }
+        return paymentRepository.findAllByProperty_Owner_LandlordID(jwtUtil.getUserId());
+    }
+
+    @Override
+    public String getAllPaymentByUser() {
+        if(jwtUtil.getRole() != 3){
+            JSONObject response = responseUtil.getErrorResponse(String.join(", ", "You do not have permission to do this action!"));
+            return response.toString();
+        }
         List<Payment> payments;
         if(jwtUtil.getRole() == 1){
             payments = paymentRepository.findAll();
@@ -66,6 +102,10 @@ public class PaymentService implements com.example.ProjectEXE.Service.IService.P
 
     @Override
     public String getPaymentByID(int id) {
+        if(jwtUtil.getRole() != 3){
+            JSONObject response = responseUtil.getErrorResponse(String.join(", ", "You do not have permission to do this action!"));
+            return response.toString();
+        }
         Payment payments = paymentRepository.findByPaymentID(id);
         if (payments.getPaymentID() == 0) {
             JSONObject errorResponse = responseUtil.getErrorResponse("No Have Payment");
@@ -76,8 +116,13 @@ public class PaymentService implements com.example.ProjectEXE.Service.IService.P
         }
     }
 
+
     @Override
     public String addPayment(Payment payment) {
+        if(jwtUtil.getRole() != 3){
+            JSONObject response = responseUtil.getErrorResponse(String.join(", ", "You do not have permission to do this action!"));
+            return response.toString();
+        }
         Double price = 0.0;
         Property existingProperty = propertyRepository.findByPropertyId(payment.getProperty().getPropertyId());
         if (existingProperty != null) {
@@ -94,7 +139,8 @@ public class PaymentService implements com.example.ProjectEXE.Service.IService.P
             payment.setUser(userRepository.findByUserID(jwtUtil.getUserId()));
             payment.setProperty(existingProperty);
             paymentRepository.save(payment);
-
+//            payment.setQrData(getQrBank(payment.getPaymentID()));
+//            paymentRepository.save(payment);
             JSONObject successResponse = responseUtil.getSuccessResponse("Success!", payment);
             return successResponse.toString();
         }else{
@@ -105,6 +151,10 @@ public class PaymentService implements com.example.ProjectEXE.Service.IService.P
 
     @Override
     public String editPayment(Payment payment) {
+        if(jwtUtil.getRole() != 1){
+            JSONObject response = responseUtil.getErrorResponse(String.join(", ", "You do not have permission to do this action!"));
+            return response.toString();
+        }
         List<String> validationResults = validatePayment(payment, "edit");
         if (payment.getUser() == null) {
             Payment payment1 = paymentRepository.findByPaymentID(payment.getPaymentID());
@@ -122,6 +172,10 @@ public class PaymentService implements com.example.ProjectEXE.Service.IService.P
 
     @Override
     public String deletePayment(Long id) {
+        if(jwtUtil.getRole() != 1){
+            JSONObject response = responseUtil.getErrorResponse(String.join(", ", "You do not have permission to do this action!"));
+            return response.toString();
+        }
         if (!paymentRepository.existsById(id)) {
             JSONObject response = responseUtil.getErrorResponse("Payment ID does not exist");
             return response.toString();
@@ -163,7 +217,6 @@ public class PaymentService implements com.example.ProjectEXE.Service.IService.P
         if (type.equals("add") && paymentRepository.existsById(payment.getPaymentID())) {
             errors.add("Payment ID already exists");
         }
-
         return errors;
     }
 

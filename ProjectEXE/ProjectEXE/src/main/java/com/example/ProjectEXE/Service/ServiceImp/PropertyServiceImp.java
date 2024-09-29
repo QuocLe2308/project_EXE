@@ -87,7 +87,7 @@ public class PropertyServiceImp implements PropertyService {
     @Override
     public String editProperty(EditPropertyDTO editPropertyDTO) {
         Property property = propertyRepository.findByPropertyId(editPropertyDTO.getId());
-        if(!Objects.equals(property.getOwner().getLandlordID(), jwtUtil.getUserId())) {
+        if(!Objects.equals(property.getOwner().getLandlordID(), jwtUtil.getUserId()) && jwtUtil.getRole() != 2) {
             JSONObject response = responseUtil.getErrorResponse(String.join(", ", "You do not have permission to do this action!"));
             return response.toString();
         }
@@ -252,10 +252,13 @@ public class PropertyServiceImp implements PropertyService {
             throw new RuntimeException("No rows found in the response.");
         }
     }*/
+
     @Override
     public List<Property> getPropertiesWithinDistance(double userLatitude, double userLongitude, double distance) {
         return propertyRepository.findPropertiesWithinDistance(userLatitude, userLongitude, distance);
     }
+
+
 
 }
 

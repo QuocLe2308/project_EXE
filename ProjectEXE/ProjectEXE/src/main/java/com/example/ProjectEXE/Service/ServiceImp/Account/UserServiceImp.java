@@ -47,15 +47,26 @@ public class UserServiceImp implements UserService {
     }
     @Override
     public String loginUser(LoginDTO loginDTO, HttpServletRequest request) {
-        if (loginDTO.getCaptcha().equals(request.getSession().getAttribute("captcha"))) {
+        System.out.println("id session luc login " + request.getSession().getId());
+        Object captchaSession = request.getSession().getAttribute("captcha");
+        System.out.println("captcha luc login tren front end " + captchaSession);
+
+        if (captchaSession == null) {
+            JSONObject errorResponse = responseUtil.getErrorResponse("Captcha is not generated or has expired!");
+            return errorResponse.toString();
+        }
+
+        if (loginDTO.getCaptcha() != null && loginDTO.getCaptcha().equals(captchaSession)) {
             User user = userRepository.findByUserName(loginDTO.getUsername());
             if (user != null) {
                 if (!user.isDisable()) {
                     String hashPassword = hashString(loginDTO.getPassword());
                     if (hashPassword.matches(user.getPasswordHash())) {
-                        String token = "";
-                            token = jwtUtil.generateToken(loginDTO.getUsername(), user.getUserID(), 3);
+                        String token = jwtUtil.generateToken(loginDTO.getUsername(), user.getUserID(), 3);
                         JSONObject response = responseUtil.getResponseLogin("success", token, "Login success!");
+                        int roleId = jwtUtil.getRoleFromToken(token);
+                        String roleIdString = String.valueOf(roleId);
+                        response.put("role", roleIdString);
                         return response.toString();
                     } else {
                         JSONObject errorResponse = responseUtil.getErrorResponse("Username or password is not correct!");
@@ -74,6 +85,7 @@ public class UserServiceImp implements UserService {
             return errorResponse.toString();
         }
     }
+
 
     @Override
     public String registerSendUser(RegisterSendDTO registerSendDTO, HttpServletRequest request) {

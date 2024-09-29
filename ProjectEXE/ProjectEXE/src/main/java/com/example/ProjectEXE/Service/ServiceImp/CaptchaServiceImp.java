@@ -24,8 +24,10 @@ public class CaptchaServiceImp {
 
     public String generateCaptcha(HttpServletRequest request) throws IOException {
         String captchaText = captchaProducer.createText();
+        System.out.println("id session luc tao " + request.getSession().getId());
+        System.out.println("captcha luc tao: " + captchaText);
         request.getSession().setAttribute("captcha", captchaText);
-        System.out.println(captchaText);
+        System.out.println(request.getSession().getAttribute("captcha"));
         BufferedImage bufferedImage = captchaProducer.createImage(captchaText);
         String base64Image = convertBufferedImageToBase64(bufferedImage);
         JSONObject response = responseUtil.getResponseCaptcha("success", "data:image/png;base64," + base64Image);

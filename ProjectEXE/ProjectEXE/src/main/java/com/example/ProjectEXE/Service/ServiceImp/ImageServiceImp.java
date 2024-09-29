@@ -14,8 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @AllArgsConstructor
@@ -60,9 +59,40 @@ public class ImageServiceImp implements ImageService {
     }
 
     @Override
-    public byte[] downloadImage(String fileName) {
+    public String downloadImage(String fileName) throws IOException {
         Optional<Image> dbImageData = imageRepository.findByName(fileName);
-        byte[] images = ImageUtil.decompressImage(dbImageData.get().getImageData());
-        return images;
+        if (dbImageData.isPresent()) {
+            byte[] imageData = ImageUtil.decompressImage(dbImageData.get().getImageData());
+            String base64Image = Base64.getEncoder().encodeToString(imageData);
+            JSONObject response = new JSONObject();
+            response.put("status", "success");
+            response.put("image", "data:image/png;base64," + base64Image);
+            return response.toString();
+        } else {
+            JSONObject response = new JSONObject();
+            response.put("status", "error");
+            response.put("message", "Image not found");
+            return response.toString();
+        }
     }
+
+    @Override
+    public List<String> getImagesByPropertyId(Long propertyId) throws IOException {
+        List<Image> images = imageRepository.findImageByProperty_PropertyId(propertyId); // Tìm bằng `property.id`
+        List<String> jsonResponseList = new ArrayList<>();
+
+        for (Image image : images) {
+            byte[] imageData = ImageUtil.decompressImage(image.getImageData());
+            String base64Image = Base64.getEncoder().encodeToString(imageData);
+
+            JSONObject response = new JSONObject();
+            response.put("status", "success");
+            response.put("image", "data:image/png;base64," + base64Image);
+
+            jsonResponseList.add(response.toString());
+        }
+        return jsonResponseList;
+    }
+
+
 }
