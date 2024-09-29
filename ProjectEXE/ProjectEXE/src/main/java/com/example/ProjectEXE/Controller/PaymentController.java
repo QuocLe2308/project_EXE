@@ -8,6 +8,9 @@ import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.file.AccessDeniedException;
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/payment")
 @AllArgsConstructor
@@ -20,9 +23,9 @@ public class PaymentController {
         return paymentService.checkLsgd(id);
     }
 
-    @GetMapping("/viewList")
+    @GetMapping("/paymentUser")
     public String viewList(){
-        return paymentService.getAllPayment();
+        return paymentService.getAllPaymentByUser();
     }
 
     @GetMapping("/{id}")
@@ -49,4 +52,14 @@ public class PaymentController {
     public String getQrBank(@PathVariable Long id){
         return paymentService.getQrBank(id);
     }
+    @GetMapping("/viewList")
+    public String getAllPayment(){
+        return paymentService.getAllPayment();
+    }
+
+    @GetMapping("/landlord")
+    public List<Payment> landlord() throws AccessDeniedException {
+        return paymentService.getPaymentsByLandlordId();
+    }
+
 }

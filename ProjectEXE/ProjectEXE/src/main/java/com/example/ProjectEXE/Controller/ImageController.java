@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/image")
@@ -27,11 +28,23 @@ public class ImageController {
     }
 
     @GetMapping("/{fileName}")
-    public ResponseEntity<?> downloadImage(@PathVariable String fileName){
-        byte[] imageData = imageService.downloadImage(fileName);
+    public ResponseEntity<?> downloadImage(@PathVariable String fileName) throws IOException {
+        String jsonResponse = imageService.downloadImage(fileName);
         return ResponseEntity.status(HttpStatus.OK)
-                .contentType(MediaType.valueOf("image/png"))
-                .body(imageData);
-
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(jsonResponse);
     }
+
+    @GetMapping("/property/{propertyId}")
+    public ResponseEntity<?> getImagesByPropertyId(@PathVariable Long propertyId) throws IOException {
+        List<String> jsonResponseList = imageService.getImagesByPropertyId(propertyId);
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(jsonResponseList);
+    }
+
+
+
+
 }

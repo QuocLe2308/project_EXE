@@ -61,6 +61,9 @@ public class LandlordServiceImp implements LandlordService {
                         token = jwtUtil.generateToken(loginDTO.getUsername(), landlord.getLandlordID(), 2);
                         System.out.println(token);
                         JSONObject response = responseUtil.getResponseLogin("success", token, "Login success!");
+                        int roleId = jwtUtil.getRoleFromToken(token);
+                        String roleIdString = String.valueOf(roleId);
+                        response.put("role", roleIdString);
                         return response.toString();
                     } else {
                         JSONObject errorResponse = responseUtil.getErrorResponse("Username or password is not correct!");

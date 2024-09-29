@@ -62,6 +62,9 @@ public class AdminServiceImp implements AdminService {
                         String token = "";
                             token = jwtUtil.generateToken(loginDTO.getUsername(), admin.getAdminID(), 1);
                             JSONObject response = responseUtil.getResponseLogin("success", token, "Login success!");
+                        int roleId = jwtUtil.getRoleFromToken(token);
+                        String roleIdString = String.valueOf(roleId);
+                        response.put("role", roleIdString);
                         return response.toString();
                     } else {
                         JSONObject errorResponse = responseUtil.getErrorResponse("Username or password is not correct!");
