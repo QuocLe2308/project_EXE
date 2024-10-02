@@ -38,6 +38,8 @@ public class ImageServiceImp implements ImageService {
         }
         Property property = propertyRepository.findByPropertyId(propertyId);
         if(!Objects.equals(property.getOwner().getLandlordID(), jwtUtil.getUserId())) {
+            System.out.println("This is id of the property "+property.getOwner().getLandlordID());
+            System.out.println("This is id of the user login "+jwtUtil.getUserId());
             JSONObject response = responseUtil.getErrorResponse(String.join(", ", "You do not have permission to do this action!"));
             return response.toString();
         }
@@ -77,22 +79,20 @@ public class ImageServiceImp implements ImageService {
     }
 
     @Override
-    public List<String> getImagesByPropertyId(Long propertyId) throws IOException {
-        List<Image> images = imageRepository.findImageByProperty_PropertyId(propertyId); // Tìm bằng `property.id`
-        List<String> jsonResponseList = new ArrayList<>();
-
+    public String getImagesByPropertyId(Long propertyId) throws IOException {
+        List<Image> images = imageRepository.findImageByProperty_PropertyId(propertyId);
+        JSONObject jsonResponse = new JSONObject();
+        List<JSONObject> imageList = new ArrayList<>();
         for (Image image : images) {
             byte[] imageData = ImageUtil.decompressImage(image.getImageData());
             String base64Image = Base64.getEncoder().encodeToString(imageData);
+            JSONObject imageJson = new JSONObject();
+            imageJson.put("status", "success");
+            imageJson.put("image", "data:image/png;base64," + base64Image);
 
-            JSONObject response = new JSONObject();
-            response.put("status", "success");
-            response.put("image", "data:image/png;base64," + base64Image);
-
-            jsonResponseList.add(response.toString());
+            imageList.add(imageJson);
         }
-        return jsonResponseList;
+        jsonResponse.put("images", imageList);
+        return jsonResponse.toString();
     }
-
-
 }

@@ -37,14 +37,10 @@ public class ImageController {
 
     @GetMapping("/property/{propertyId}")
     public ResponseEntity<?> getImagesByPropertyId(@PathVariable Long propertyId) throws IOException {
-        List<String> jsonResponseList = imageService.getImagesByPropertyId(propertyId);
+        String jsonResponse = imageService.getImagesByPropertyId(propertyId); // Lấy JSON từ service
 
         return ResponseEntity.status(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(jsonResponseList);
+                .body(jsonResponse);
     }
-
-
-
-
 }
