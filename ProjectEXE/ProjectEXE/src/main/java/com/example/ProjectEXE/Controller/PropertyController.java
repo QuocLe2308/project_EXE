@@ -1,13 +1,18 @@
 package com.example.ProjectEXE.Controller;
 
+import com.example.ProjectEXE.DTO.CombineDTO.PropertyWithImagesDTO;
 import com.example.ProjectEXE.DTO.Property.EditPropertyDTO;
 import com.example.ProjectEXE.DTO.Property.GetLocationPropertyDTO;
 import com.example.ProjectEXE.Models.Property;
 import com.example.ProjectEXE.Service.IService.PropertyService;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -19,8 +24,9 @@ public class PropertyController {
     private final PropertyService propertyService;
 
     @GetMapping()
-    public String getAllProperty() {
-        return propertyService.getAllProperty();
+    public ResponseEntity<String> getAllProperty() {
+        String allProperties = propertyService.getAllProperty();
+        return ResponseEntity.ok(allProperties);
     }
 
     @PostMapping("/add")
@@ -39,18 +45,22 @@ public class PropertyController {
     }
 
     @GetMapping("/{id}")
-    public String getProperty(@PathVariable Long id) {
-        return propertyService.getDetailOfProperty(id);
+    public ResponseEntity<String> getProperty(@PathVariable Long id) {
+        String propertyDetail = propertyService.getDetailOfProperty(id);
+        return ResponseEntity.ok(propertyDetail);
     }
 
     @GetMapping("/desc")
-    public List<Property> getDescProperty() {
-        return propertyService.sortByPriceHighToLow();
+    public ResponseEntity<List<PropertyWithImagesDTO>> getDescProperty() {
+        List<PropertyWithImagesDTO> properties = propertyService.sortByPriceHighToLow();
+        return ResponseEntity.ok(properties);
     }
 
+    // Lấy danh sách nhà trọ theo giá từ thấp đến cao, trả về JSON
     @GetMapping("/asc")
-    public List<Property> getAscProperty() {
-        return propertyService.sortByPriceLowToHigh();
+    public ResponseEntity<List<PropertyWithImagesDTO>> getAscProperty() {
+        List<PropertyWithImagesDTO> properties = propertyService.sortByPriceLowToHigh();
+        return ResponseEntity.ok(properties);
     }
 
     @GetMapping("/getCombine")
@@ -58,7 +68,7 @@ public class PropertyController {
         return propertyService.getCombinedData();
     }
 
-    @PostMapping("/nearby")
+/*    @PostMapping("/nearby")
     public List<Property> getNearbyProperties(@RequestBody GetLocationPropertyDTO getLocationPropertyDTO) {
 
         List<Property> properties = propertyService.getPropertiesWithinDistance(
@@ -67,29 +77,17 @@ public class PropertyController {
                 getLocationPropertyDTO.getDistance());
 
         return properties;
-    }
-
-    /*@PostMapping("/nearby")
-    public List<Property> getNearbyProperties(
-            @RequestBody double latitude,
-            @RequestBody double longitude,
-            @RequestBody double distance) {
-        return propertyService.findNearbyProperties(latitude, longitude, distance);
     }*/
 
-//    @PostMapping("/distance")
-//    public ResponseEntity<String> getDistanceBetweenUserAndProperty(
-//            @RequestBody GetLocationPropertyDTO getLocationPropertyDTO, ) {
-//        Property property = propertyService.getDetailOfPropertyForDistance(propertyId);
-//        if (property == null) {
-//            return ResponseEntity.status(404).body("Property not found");
-//        }
-//
-//        double distance = propertyService.getDistanceBetweenUserAndProperty(userLat, userLng, property);
-//        JSONObject response = new JSONObject();
-//        response.put("distance", distance);
-//        response.put("unit", "km");
-//
-//        return ResponseEntity.ok(response.toString());
-//    }
+    @PostMapping("/nearby")
+    public ResponseEntity<?> getNearbyProperties(@RequestBody GetLocationPropertyDTO getLocationPropertyDTO) throws IOException {
+
+        List<PropertyWithImagesDTO> propertiesWithImages = propertyService.getPropertiesWithinDistance(getLocationPropertyDTO.getLatitude(), getLocationPropertyDTO.getLongitude(), getLocationPropertyDTO.getDistance());
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(propertiesWithImages);
+    }
+
+
 }

@@ -10,4 +10,8 @@ import lombok.NoArgsConstructor;
 public class RegisterSendDTO {
     private String username;
     private String email;
+    private String passwordHash;
+    private String fullName;
+    private String phoneNumber;
+    private String address;
 }

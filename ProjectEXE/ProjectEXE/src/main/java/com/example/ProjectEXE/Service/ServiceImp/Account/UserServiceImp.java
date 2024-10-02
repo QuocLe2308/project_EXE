@@ -92,52 +92,67 @@ public class UserServiceImp implements UserService {
         if (userRepository.existsByUserName(registerSendDTO.getUsername())) {
             JSONObject errorResponse = responseUtil.getErrorResponse("Username Exists!");
             return errorResponse.toString();
-        }else{
-            request.getSession().setAttribute("user_name_register", String.valueOf(registerSendDTO.getUsername()));
+        } else {
+            request.getSession().setAttribute("user_name_register", registerSendDTO.getUsername());
         }
         if (userRepository.existsByEmail(registerSendDTO.getEmail())) {
             JSONObject errorResponse = responseUtil.getErrorResponse("Email Exists!");
             return errorResponse.toString();
+        } else {
+            request.getSession().setAttribute("email_register", registerSendDTO.getEmail());
         }
-        else{
-            request.getSession().setAttribute("email_register", String.valueOf(registerSendDTO.getEmail()));
+        if (registerSendDTO.getPasswordHash() == null || registerSendDTO.getFullName() == null ||
+                registerSendDTO.getPhoneNumber() == null || registerSendDTO.getAddress() == null) {
+            JSONObject errorResponse = responseUtil.getErrorResponse("All fields must be provided!");
+            return errorResponse.toString();
         }
+        request.getSession().setAttribute("password", registerSendDTO.getPasswordHash());
+        request.getSession().setAttribute("fullName", registerSendDTO.getFullName());
+        request.getSession().setAttribute("phoneNumber", registerSendDTO.getPhoneNumber());
+        request.getSession().setAttribute("address", registerSendDTO.getAddress());
         int randomNumber = new Random().nextInt(900000) + 100000;
         String subject = "OTP authentication";
         sendMailServiceImp.send_otp(registerSendDTO.getEmail(), subject, randomNumber);
         request.getSession().setAttribute("code_register", String.valueOf(randomNumber));
-        JSONObject errorResponse = responseUtil.getSuccessResponse("Send OTP success!");
-        return errorResponse.toString();
+        JSONObject successResponse = responseUtil.getSuccessResponse("Send OTP success!");
+        return successResponse.toString();
     }
+
 
     @Override
     public String registerConfirmUser(RegisterConfirmDTO registerConfirmDTO, HttpServletRequest request) {
         String otp = registerConfirmDTO.getOtp();
-        if (otp.equals(request.getSession().getAttribute("code_register"))) {
-            User user = registerConfirmDTO.toUser();
-            List<String> validationResults = validateUser(user, "add");
-            if (!validationResults.isEmpty()) {JSONObject response = responseUtil.getErrorResponse(String.join(", ", validationResults));
-                return response.toString();
-            } else {
-                if(!user.getEmail().equals(request.getSession().getAttribute("email_register"))){
-                    JSONObject errorResponse = responseUtil.getErrorResponse("Email must be the same as the email you originally registered with!");
-                    return errorResponse.toString();
-                }
-                if(!user.getUserName().equals(request.getSession().getAttribute("user_name_register"))){
-                    JSONObject errorResponse = responseUtil.getErrorResponse("UserName must be the same as the UserName you originally registered with!");
-                    return errorResponse.toString();
-                }
-                user.setRole(3);
-                user.setPasswordHash(hashString(user.getPasswordHash()));
-                userRepository.save(user);
-                JSONObject errorResponse = responseUtil.getSuccessResponse("Create success!");
-                return new JSONObject(user).toString();
-            }
-        } else {
-            JSONObject errorResponse = responseUtil.getErrorResponse("OTP is not correct!!");
+        String sessionOtp = (String) request.getSession().getAttribute("code_register");
+        if (sessionOtp == null || !otp.equals(sessionOtp)) {
+            JSONObject errorResponse = responseUtil.getErrorResponse("OTP is not correct!");
             return errorResponse.toString();
         }
+        User user = new User();
+        Object userNameObj = request.getSession().getAttribute("user_name_register");
+        Object emailObj = request.getSession().getAttribute("email_register");
+        Object fullNameObj = request.getSession().getAttribute("fullName");
+        Object phoneNumberObj = request.getSession().getAttribute("phoneNumber");
+        Object addressObj = request.getSession().getAttribute("address");
+        Object passwordHashObj = request.getSession().getAttribute("password");
+
+        if (userNameObj == null || emailObj == null || fullNameObj == null ||
+                phoneNumberObj == null || addressObj == null || passwordHashObj == null) {
+            JSONObject errorResponse = responseUtil.getErrorResponse("Missing user information in session!");
+            return errorResponse.toString();
+        }
+
+        user.setUserName(userNameObj.toString());
+        user.setEmail(emailObj.toString());
+        user.setFullName(fullNameObj.toString());
+        user.setPhoneNumber(phoneNumberObj.toString());
+        user.setAddress(addressObj.toString());
+        user.setRole(3);
+        user.setPasswordHash(hashString(passwordHashObj.toString()));
+        userRepository.save(user);
+        JSONObject successResponse = responseUtil.getSuccessResponse("Create success!");
+        return new JSONObject(user).toString();
     }
+
 
     @Transactional
     @Override

@@ -2,6 +2,7 @@ package com.example.ProjectEXE.Service.ServiceImp;
 
 import com.example.ProjectEXE.Config.GoogleApiConfig;
 import com.example.ProjectEXE.DTO.CombineDTO.CombineImageAndPropertyDTO;
+import com.example.ProjectEXE.DTO.CombineDTO.PropertyWithImagesDTO;
 import com.example.ProjectEXE.DTO.Property.EditPropertyDTO;
 import com.example.ProjectEXE.DTO.Property.GetLocationPropertyDTO;
 import com.example.ProjectEXE.Models.Image;
@@ -11,6 +12,7 @@ import com.example.ProjectEXE.Repository.Account.UserRepository;
 import com.example.ProjectEXE.Repository.ImageRepository;
 import com.example.ProjectEXE.Repository.PropertyRepository;
 import com.example.ProjectEXE.Service.IService.PropertyService;
+import com.example.ProjectEXE.Service.ServiceImp.Utils.ImageUtil;
 import com.example.ProjectEXE.Service.ServiceImp.Utils.JwtUtil;
 import com.example.ProjectEXE.Service.ServiceImp.Utils.ResponseUtil;
 import jakarta.transaction.Transactional;
@@ -24,10 +26,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.io.IOException;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -79,10 +79,12 @@ public class PropertyServiceImp implements PropertyService {
             JSONObject errorResponse = responseUtil.getErrorResponse("Not Have Property!");
             return errorResponse.toString();
         } else {
-            JSONObject successResponse = responseUtil.getSuccessResponse("Success!", properties);
+            List<PropertyWithImagesDTO> propertyWithImagesDTOList = convertPropertiesToDTO(properties);
+            JSONObject successResponse = responseUtil.getSuccessResponse("Success!", propertyWithImagesDTOList);
             return successResponse.toString();
         }
     }
+
 
     @Override
     public String editProperty(EditPropertyDTO editPropertyDTO) {
@@ -105,6 +107,7 @@ public class PropertyServiceImp implements PropertyService {
             return new JSONObject(property).toString();
         }
     }
+
     @Override
     @Transactional
     public String deleteProperty(Long id) {
@@ -130,9 +133,22 @@ public class PropertyServiceImp implements PropertyService {
                 JSONObject response = responseUtil.getErrorResponse("Property not found");
                 return response.toString();
             }
-            return new JSONObject(property).toString();
+
+            List<Image> images = imageRepository.findImageByProperty_PropertyId(property.getPropertyId());
+            List<String> base64Images = new ArrayList<>();
+
+            for (Image image : images) {
+                byte[] imageData = ImageUtil.decompressImage(image.getImageData());
+                String base64Image = Base64.getEncoder().encodeToString(imageData);
+                base64Images.add("data:image/png;base64," + base64Image);
+            }
+
+            PropertyWithImagesDTO propertyWithImagesDTO = new PropertyWithImagesDTO(property, base64Images);
+            JSONObject response = new JSONObject(propertyWithImagesDTO);
+            return response.toString();
         }
     }
+
 
     @Override
     public List<String> validateProperty(Property property, String type) {
@@ -168,14 +184,17 @@ public class PropertyServiceImp implements PropertyService {
     }
 
     @Override
-    public List<Property> sortByPriceHighToLow(){
-        return propertyRepository.findAllByOrderByMonthlyRentDesc();
+    public List<PropertyWithImagesDTO> sortByPriceHighToLow() {
+        List<Property> properties = propertyRepository.findAllByOrderByMonthlyRentDesc();
+        return convertPropertiesToDTO(properties);
     }
 
     @Override
-    public List<Property> sortByPriceLowToHigh(){
-        return propertyRepository.findAllByOrderByMonthlyRentAsc();
+    public List<PropertyWithImagesDTO> sortByPriceLowToHigh() {
+        List<Property> properties = propertyRepository.findAllByOrderByMonthlyRentAsc();
+        return convertPropertiesToDTO(properties);
     }
+
 
     @Override
     public String getCombinedData() {
@@ -197,67 +216,51 @@ public class PropertyServiceImp implements PropertyService {
         return new JSONObject(combineImageAndPropertyDTO).toString();
     }
 
-    /*@Override
-    public List<Property> findNearbyProperties(GetLocationPropertyDTO getLocationPropertyDTO) {
-        List<Property> property = propertyRepository.findNearbyProperties(
-                getLocationPropertyDTO.getLatitude(),
-                getLocationPropertyDTO.getLongitude(),
-                getLocationPropertyDTO.getDistance());
-        );
-    }*/
+    @Override
+    public List<PropertyWithImagesDTO> getPropertiesWithinDistance(double latitude, double longitude, double distance) throws IOException {
+        List<Property> properties = propertyRepository.findPropertiesWithinDistance(latitude, longitude, distance);
+        List<PropertyWithImagesDTO> propertyWithImagesDTOList = new ArrayList<>();
+        System.out.println("kinh do nhap tu web " + latitude);
+        System.out.println("vi do nhap tu web " + longitude);
+        System.out.println("ban kinh nhap tu web " + distance);
+        System.out.println("danh sach nha tro nhan duoc khi nhan ve kinh do vi do" + properties);
+        for (Property property : properties) {
+            List<Image> images = imageRepository.findImageByProperty_PropertyId(property.getPropertyId());
+            List<String> base64Images = new ArrayList<>();
 
-//    @Override
-//    public Property getDetailOfPropertyForDistance(Long id) {
-//        return propertyRepository.findById(id).orElse(null);
-//    }
-//
-//
-    /*@Override
-    public List<Property> findNearbyProperties(double userLatitude, double userLongitude, double distance) {
-        List<Property> allProperties = getAllProperties(); // Phương thức giả định để lấy tất cả bất động sản
-        List<Property> nearbyProperties = new ArrayList<>();
-
-        for (Property property : allProperties) {
-            double propertyLatitude = property.getLatitude(); // Thay thế bằng phương thức để lấy latitude
-            double propertyLongitude = property.getLongitude(); // Thay thế bằng phương thức để lấy longitude
-
-            double propertyDistance = getDistanceBetweenUserAndProperty(userLatitude, userLongitude, propertyLatitude, propertyLongitude);
-
-            if (propertyDistance <= distance) {
-                nearbyProperties.add(property);
+            for (Image image : images) {
+                byte[] imageData = ImageUtil.decompressImage(image.getImageData());
+                String base64Image = Base64.getEncoder().encodeToString(imageData);
+                base64Images.add("data:image/png;base64," + base64Image);
             }
+            PropertyWithImagesDTO propertyWithImagesDTO = new PropertyWithImagesDTO(property, base64Images);
+            propertyWithImagesDTOList.add(propertyWithImagesDTO);
         }
-        return nearbyProperties;
+        System.out.println("danh sach sau khi add vao list " +propertyWithImagesDTOList);
+
+        return propertyWithImagesDTOList;
     }
 
     @Override
-    public double getDistanceBetweenUserAndProperty(double userLatitude, double userLongitude, double propertyLatitude, double propertyLongitude) {
-        String url = String.format("%s?origins=%f,%f&destinations=%f,%f&key=%s", googleDistanceMatrixUrl, userLatitude, userLongitude, propertyLatitude, propertyLongitude, googleApiConfig.getKey());
+    public List<PropertyWithImagesDTO> convertPropertiesToDTO(List<Property> properties) {
+        List<PropertyWithImagesDTO> propertyWithImagesDTOList = new ArrayList<>();
 
-        RestTemplate restTemplate = new RestTemplate();
-        String jsonResponse = restTemplate.getForObject(url, String.class);
+        for (Property property : properties) {
+            List<Image> images = imageRepository.findImageByProperty_PropertyId(property.getPropertyId());
+            List<String> base64Images = new ArrayList<>();
 
-        JSONObject json = new JSONObject(jsonResponse);
-        JSONArray rows = json.getJSONArray("rows");
-
-        if (rows.length() > 0) {
-            JSONArray elements = rows.getJSONObject(0).getJSONArray("elements");
-            if (elements.length() > 0) {
-                double distanceInMeters = elements.getJSONObject(0).getJSONObject("distance").getDouble("value");
-                return distanceInMeters / 1000.0; // Trả về khoảng cách tính theo km
-            } else {
-                throw new RuntimeException("No elements found in the response.");
+            for (Image image : images) {
+                byte[] imageData = ImageUtil.decompressImage(image.getImageData());
+                String base64Image = Base64.getEncoder().encodeToString(imageData);
+                base64Images.add("data:image/png;base64," + base64Image);
             }
-        } else {
-            throw new RuntimeException("No rows found in the response.");
+
+            PropertyWithImagesDTO propertyWithImagesDTO = new PropertyWithImagesDTO(property, base64Images);
+            propertyWithImagesDTOList.add(propertyWithImagesDTO);
         }
-    }*/
 
-    @Override
-    public List<Property> getPropertiesWithinDistance(double userLatitude, double userLongitude, double distance) {
-        return propertyRepository.findPropertiesWithinDistance(userLatitude, userLongitude, distance);
+        return propertyWithImagesDTOList;
     }
-
 
 
 }
