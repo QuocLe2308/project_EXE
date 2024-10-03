@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EditPropertyDTO {
-    private Long id;
+    private Long propertyId;
     private Landlord owner;
     private String description;
     private Double monthlyRent;
