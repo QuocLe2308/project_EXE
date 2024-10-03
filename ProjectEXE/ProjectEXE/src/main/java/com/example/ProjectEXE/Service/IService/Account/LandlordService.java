@@ -13,7 +13,7 @@ public interface LandlordService {
     public String getAllLandlords();
     public String loginLandlord(LoginDTO loginDTO, HttpServletRequest request);
     public String addLandlord(Landlord landlord);
-    public String editLandlord(EditAccountDTO editAccountDTO);
+//    public String editLandlord(EditAccountDTO editAccountDTO);
     public String deleteLandlord(Long id);
     public String forgotPasswordLandlordSend(ForgotPasswordAccountDTO forgotPasswordAccountDTO, HttpServletRequest request);
     public String forgotPasswordLandlordConfirm(ForgotPasswordAccountDTO forgotPasswordAccountDTO, HttpServletRequest request);
@@ -22,4 +22,5 @@ public interface LandlordService {
     public List<String> validateLandlord(Landlord landlord, String type);
     public String hashString(String input);
     public String getById(Long id);
+    public String editLandlord(Long id, EditAccountDTO editAccountDTO);
 }

@@ -15,7 +15,7 @@ public interface AdminService {
     public String getAllAdmins();
     public String loginAdmin(LoginDTO loginDTO, HttpServletRequest request);
     public String addAdmin(Admin admin);
-    public String editAdmin(EditAccountDTO editAccountDTO);
+//    public String editAdmin(EditAccountDTO editAccountDTO);
     public String deleteAdmin(Long id);
     public String forgotPasswordAdminSend(ForgotPasswordAccountDTO forgotPasswordAccountDTO, HttpServletRequest request);
     public String forgotPasswordAdminConfirm(ForgotPasswordAccountDTO forgotPasswordAccountDTO, HttpServletRequest request);
@@ -24,4 +24,6 @@ public interface AdminService {
     public List<String> validateAdmin(Admin admin, String type);
     public String hashString(String input);
     public String getById(Long id);
+//    public String editUser(Long id, EditAccountDTO editAccountDTO);
+    public String editAdmin(Long id, EditAccountDTO editAccountDTO);
 }

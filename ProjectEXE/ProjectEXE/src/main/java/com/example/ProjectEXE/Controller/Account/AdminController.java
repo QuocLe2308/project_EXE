@@ -36,9 +36,9 @@ public class AdminController {
         return adminService.addAdmin(Admin);
     }
 
-    @PutMapping()
-    public String editAdmin(@RequestBody EditAccountDTO editAccountDTO) {
-        return adminService.editAdmin(editAccountDTO);
+    @PutMapping("/{id}")
+    public String editAdmin(@PathVariable Long id, @RequestBody EditAccountDTO editAccountDTO) {
+        return adminService.editAdmin(id, editAccountDTO);
     }
 
     @DeleteMapping("/delete/{id}")

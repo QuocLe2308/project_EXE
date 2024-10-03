@@ -183,30 +183,30 @@ public class UserServiceImp implements UserService {
     }
 
     @Override
-    public String editUser(EditAccountDTO editAccountDTO, HttpServletRequest request) {
+    public String editUser(Long id, EditAccountDTO editAccountDTO) {
         List<String> validationResults = validateEditUser(editAccountDTO);
         if (!validationResults.isEmpty()) {
             JSONObject response = responseUtil.getErrorResponse(String.join(", ", validationResults));
             return response.toString();
-        } else {
-            if(!Objects.equals(editAccountDTO.getId(), jwtUtil.getUserId())){
-                JSONObject response = responseUtil.getErrorResponse(String.join(", ", "Invalid user operation!"));
-                return response.toString();
-            }else {
-                User user = userRepository.findByUserID(editAccountDTO.getId());
-                user.setFullName(editAccountDTO.getFullName());
-                user.setPhoneNumber(editAccountDTO.getPhoneNumber());
-                user.setAddress(editAccountDTO.getAddress());
-                user.onUpdate();
-                userRepository.save(user);
-                JSONObject errorResponse = responseUtil.getSuccessResponse("Edit success!");
-                return new JSONObject(user).toString();
-            }
         }
-
+        if (!Objects.equals(id, jwtUtil.getUserId())) {
+            JSONObject response = responseUtil.getErrorResponse("Invalid user operation!");
+            return response.toString();
+        }
+        User user = userRepository.findByUserID(id);
+        if (user == null) {
+            JSONObject response = responseUtil.getErrorResponse("User does not exist!");
+            return response.toString();
+        }
+        user.setFullName(editAccountDTO.getFullName());
+        user.setPhoneNumber(editAccountDTO.getPhoneNumber());
+        user.setAddress(editAccountDTO.getAddress());
+        user.onUpdate();
+        userRepository.save(user);
+        JSONObject successResponse = responseUtil.getSuccessResponse("Edit success!");
+        return new JSONObject(user).toString();
     }
 
-    //function hash password
     @Override
     public String hashString(String input) {
         try {
@@ -262,9 +262,6 @@ public class UserServiceImp implements UserService {
 
         List<String> errors = new ArrayList<>();
 
-        if (!userRepository.existsById(editAccountDTO.getId())) {
-            errors.add("UserID does not exist");
-        }
         if (editAccountDTO.getFullName().isEmpty()) {
             errors.add("Please enter Full Name");
         }

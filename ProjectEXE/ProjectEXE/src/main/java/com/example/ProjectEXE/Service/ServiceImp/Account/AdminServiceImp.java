@@ -109,26 +109,24 @@ public class AdminServiceImp implements AdminService {
         }
     }
     @Override
-    public String editAdmin(EditAccountDTO editAccountDTO) {
-        if (!adminRepository.existsAdminByAdminID(editAccountDTO.getId())) {
-            JSONObject response = responseUtil.getErrorResponse(String.join(", ", "Admin does not exist!"));
+    public String editAdmin(Long id, EditAccountDTO editAccountDTO) {
+        if (!Objects.equals(id, jwtUtil.getUserId())) {
+            JSONObject response = responseUtil.getErrorResponse("Invalid user operation!");
             return response.toString();
-        } else {
-            if(!Objects.equals(editAccountDTO.getId(), jwtUtil.getUserId())){
-                JSONObject response = responseUtil.getErrorResponse(String.join(", ", "Invalid user operation!"));
-                return response.toString();
-            }else{
-                Admin admin = adminRepository.findByAdminID(editAccountDTO.getId());
-                admin.setFullName(editAccountDTO.getFullName());
-                admin.setPhoneNumber(editAccountDTO.getPhoneNumber());
-                admin.setAddress(editAccountDTO.getAddress());
-                adminRepository.save(admin);
-                JSONObject response = responseUtil.getSuccessResponse("success");
-                return new JSONObject(admin).toString();
-            }
-
         }
+        Admin admin = adminRepository.findByAdminID(id);
+        if (admin == null) {
+            JSONObject response = responseUtil.getErrorResponse("User does not exist!");
+            return response.toString();
+        }
+        admin.setFullName(editAccountDTO.getFullName());
+        admin.setPhoneNumber(editAccountDTO.getPhoneNumber());
+        admin.setAddress(editAccountDTO.getAddress());
+        adminRepository.save(admin);
+        JSONObject successResponse = responseUtil.getSuccessResponse("Edit success!");
+        return new JSONObject(admin).toString();
     }
+
     @Transactional
     @Override
     public String deleteAdmin(Long id) {
