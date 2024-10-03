@@ -21,7 +21,7 @@ public class LandlordController {
     private final LandlordService landlordService;
 
     @GetMapping("/viewList")
-    public String getAllAdmin() {
+    public String getAllLandlord() {
         return landlordService.getAllLandlords();
     }
 
@@ -58,5 +58,15 @@ public class LandlordController {
     @PostMapping("/change_password")
     public String changePasswordAdmin(@RequestBody ChangePasswordAccountDTO changePasswordAccountDTO) {
         return landlordService.changePasswordLandlord(changePasswordAccountDTO);
+    }
+
+    @GetMapping("/profile")
+    public String getProfile() {
+        return landlordService.getInfoUser().toString();
+    }
+
+    @GetMapping("/{id}")
+    public String getUserById(@PathVariable Long id) {
+        return landlordService.getById(id);
     }
 }

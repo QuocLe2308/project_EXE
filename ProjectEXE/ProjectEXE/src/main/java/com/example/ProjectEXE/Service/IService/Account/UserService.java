@@ -21,5 +21,7 @@ public interface UserService {
     public String forgotPasswordUserSend(ForgotPasswordAccountDTO forgotPasswordAccountDTO, HttpServletRequest request);
     public String forgotPasswordUserConfirm(ForgotPasswordAccountDTO forgotPasswordAccountDTO, HttpServletRequest request);
     public String changePasswordUser(ChangePasswordAccountDTO changePasswordAccountDTO);
+    public String getById(Long id);
+    public User getInfoUser();
 
 }

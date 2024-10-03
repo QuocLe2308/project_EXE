@@ -4,6 +4,7 @@ import com.example.ProjectEXE.DTO.Account.ChangePasswordAccountDTO;
 import com.example.ProjectEXE.DTO.Account.EditAccountDTO;
 import com.example.ProjectEXE.DTO.Account.ForgotPasswordAccountDTO;
 import com.example.ProjectEXE.DTO.Account.LoginDTO;
+import com.example.ProjectEXE.Models.Account.Admin;
 import com.example.ProjectEXE.Models.Account.Landlord;
 import com.example.ProjectEXE.Repository.Account.LandlordRepository;
 import com.example.ProjectEXE.Service.IService.Account.LandlordService;
@@ -38,15 +39,34 @@ public class LandlordServiceImp implements LandlordService {
 
     @Override
     public String getAllLandlords() {
-        List<Landlord> landlords = landlordRepository.findAllByisDisableFalse();
+        List<Landlord> landlords = landlordRepository.findAll();
         landlords.forEach(landlord -> landlord.setPasswordHash(""));
         if (landlords.isEmpty()) {
             JSONObject errorResponse = responseUtil.getErrorResponse("Not Have Account!");
             return errorResponse.toString();
         } else {
             JSONObject successResponse = responseUtil.getSuccessResponse("Success!", landlords);
-            return new JSONObject(successResponse).toString() ;
+            return successResponse.toString();
         }
+    }
+
+    @Override
+    public String getById(Long id){
+        Landlord landlord = landlordRepository.findByLandlordID(id);
+        if(jwtUtil.getRole() != 1) {
+            JSONObject response = responseUtil.getErrorResponse(String.join(", ", "You do not have permission to do this action!"));
+            return response.toString();
+        }
+        else{
+            return new JSONObject(landlord).toString();
+        }
+    }
+
+    @Override
+    public Landlord getInfoUser() {
+        Landlord landlord = landlordRepository.findByLandlordID(jwtUtil.getUserId());
+        landlord.setPasswordHash("");
+        return landlord;
     }
 
     @Override
@@ -190,13 +210,6 @@ public class LandlordServiceImp implements LandlordService {
             JSONObject response = responseUtil.getErrorResponse("Old password is not correct!");
             return response.toString();
         }
-    }
-
-    @Override
-    public Landlord getInfoUser() {
-        Landlord landlord = landlordRepository.findByLandlordID(jwtUtil.getUserId());
-        landlord.setPasswordHash("");
-        return landlord;
     }
 
     @Override

@@ -5,6 +5,7 @@ import com.example.ProjectEXE.DTO.Account.EditAccountDTO;
 import com.example.ProjectEXE.DTO.Account.ForgotPasswordAccountDTO;
 import com.example.ProjectEXE.DTO.Account.LoginDTO;
 import com.example.ProjectEXE.Models.Account.Admin;
+import com.example.ProjectEXE.Models.Account.User;
 import com.example.ProjectEXE.Repository.Account.AdminRepository;
 import com.example.ProjectEXE.Service.IService.Account.AdminService;
 import com.example.ProjectEXE.Service.ServiceImp.SendMailServiceImp;
@@ -50,6 +51,16 @@ public class AdminServiceImp implements AdminService {
             return successResponse.toString();
         }
     }
+
+    @Override
+    public String getById(Long id){
+        if(jwtUtil.getRole() != 1) {
+            JSONObject response = responseUtil.getErrorResponse(String.join(", ", "You do not have permission to do this action!"));
+            return response.toString();
+        }
+        Admin admin = adminRepository.findByAdminID(id);
+            return new JSONObject(admin).toString();
+        }
 
     @Override
     public String loginAdmin(LoginDTO loginDTO, HttpServletRequest request) {
@@ -167,8 +178,9 @@ public class AdminServiceImp implements AdminService {
         }else {
                 JSONObject response = responseUtil.getErrorResponse("OTP is not correct!");
                 return response.toString();
-            }
         }
+    }
+
     @Override
     public String changePasswordAdmin(ChangePasswordAccountDTO changePasswordAccountDTO) {
         Admin admin = adminRepository.findByAdminID(jwtUtil.getUserId());
@@ -193,6 +205,7 @@ public class AdminServiceImp implements AdminService {
         admin.setPasswordHash("");
         return admin;
     }
+
     @Override
     public List<String> validateAdmin(Admin admin, String type) {
 
