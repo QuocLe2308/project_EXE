@@ -13,7 +13,7 @@ public interface UserService {
     public String loginUser(LoginDTO loginDTO, HttpServletRequest request);
     public String registerSendUser(RegisterSendDTO registerSendDTO, HttpServletRequest request);
     public String registerConfirmUser(RegisterConfirmDTO registerConfirmDTO, HttpServletRequest request);
-    public String editUser(EditAccountDTO editAccountDTO, HttpServletRequest request);
+//    public String editUser(EditAccountDTO editAccountDTO, HttpServletRequest request);
     public String hashString(String input);
     public List<String> validateUser(User user, String type);
     public List<String> validateEditUser(EditAccountDTO editAccountDTO);
@@ -23,5 +23,6 @@ public interface UserService {
     public String changePasswordUser(ChangePasswordAccountDTO changePasswordAccountDTO);
     public String getById(Long id);
     public User getInfoUser();
+    public String editUser(Long id, EditAccountDTO editAccountDTO);
 
 }

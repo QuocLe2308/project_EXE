@@ -30,9 +30,9 @@ public class LandlordController {
         return landlordService.addLandlord(landlord);
     }
 
-    @PutMapping()
-    public String editAdmin(@RequestBody EditAccountDTO editAccountDTO) {
-        return landlordService.editLandlord(editAccountDTO);
+    @PutMapping("/{id}")
+    public String editAdmin(@PathVariable Long id, @RequestBody EditAccountDTO editAccountDTO) {
+        return landlordService.editLandlord(id, editAccountDTO);
     }
 
     @DeleteMapping("/delete/{id}")

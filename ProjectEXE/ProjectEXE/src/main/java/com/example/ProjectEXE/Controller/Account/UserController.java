@@ -44,14 +44,16 @@ public class UserController {
         return userService.registerConfirmUser(registerConfirmDTO, request);
     }
 
-    @PutMapping()
-    public String editUser(@RequestBody EditAccountDTO editAccountDTO, HttpServletRequest request) {
-        return userService.editUser(editAccountDTO, request);
+    @PutMapping("/{id}")
+    public String editUser(@PathVariable Long id, @RequestBody EditAccountDTO editAccountDTO) {
+        return userService.editUser(id, editAccountDTO);
     }
+
     @DeleteMapping("/delete/{id}")
     public String deleteUser(@PathVariable Long id) {
         return userService.deleteUser(id);
     }
+
     @PostMapping("/forgot_password_send")
     public String forgotPasswordAdminSend(@RequestBody ForgotPasswordAccountDTO forgotPasswordAccountDTO, HttpServletRequest request) {
         return userService.forgotPasswordUserSend(forgotPasswordAccountDTO, request);

@@ -119,24 +119,23 @@ public class LandlordServiceImp implements LandlordService {
     }
 
     @Override
-    public String editLandlord(EditAccountDTO editAccountDTO) {
-        if (!landlordRepository.existsByLandlordID(editAccountDTO.getId())) {
-            JSONObject response = responseUtil.getErrorResponse(String.join(", ", "Landlord does not exist!"));
+    public String editLandlord(Long id, EditAccountDTO editAccountDTO) {
+        if (!Objects.equals(id, jwtUtil.getUserId())) {
+            JSONObject response = responseUtil.getErrorResponse("Invalid user operation!");
             return response.toString();
-        } else {
-            if(!Objects.equals(editAccountDTO.getId(), jwtUtil.getUserId())){
-                JSONObject response = responseUtil.getErrorResponse(String.join(", ", "Invalid user operation!"));
-                return response.toString();
-            }else {
-                Landlord landlord = landlordRepository.findByLandlordID(editAccountDTO.getId());
-                landlord.setFullName(editAccountDTO.getFullName());
-                landlord.setPhoneNumber(editAccountDTO.getPhoneNumber());
-                landlord.setAddress(editAccountDTO.getAddress());
-                landlordRepository.save(landlord);
-                JSONObject response = responseUtil.getSuccessResponse("success");
-                return new JSONObject(landlord).toString();
-            }
         }
+        Landlord landlord = landlordRepository.findByLandlordID(id);
+        if (landlord == null) {
+            JSONObject response = responseUtil.getErrorResponse("Landlord does not exist!");
+            return response.toString();
+        }
+        landlord.setFullName(editAccountDTO.getFullName());
+        landlord.setPhoneNumber(editAccountDTO.getPhoneNumber());
+        landlord.setAddress(editAccountDTO.getAddress());
+        landlord.onUpdate();
+        landlordRepository.save(landlord);
+        JSONObject successResponse = responseUtil.getSuccessResponse("Edit success!");
+        return new JSONObject(landlord).toString();
     }
 
     @Override

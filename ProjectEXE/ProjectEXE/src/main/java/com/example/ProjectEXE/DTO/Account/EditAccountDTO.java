@@ -6,7 +6,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EditAccountDTO {
-    private Long id;
     private String fullName;
     private String phoneNumber;
     private String address;

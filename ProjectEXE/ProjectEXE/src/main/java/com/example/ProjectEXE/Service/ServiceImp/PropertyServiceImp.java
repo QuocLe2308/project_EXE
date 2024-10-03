@@ -114,7 +114,6 @@ public class PropertyServiceImp implements PropertyService {
 
     @Override
     public String editProperty(Long id, EditPropertyDTO editPropertyDTO) {
-        System.out.println("ID truyền từ front end: " + id);
         Property property = propertyRepository.findByPropertyId(id);
 
         if (!Objects.equals(property.getOwner().getLandlordID(), jwtUtil.getUserId()) && jwtUtil.getRole() != 2) {
