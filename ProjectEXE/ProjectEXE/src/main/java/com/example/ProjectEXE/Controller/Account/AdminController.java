@@ -65,4 +65,14 @@ public class AdminController {
     public String changePasswordAdmin(@RequestBody ChangePasswordAccountDTO changePasswordAccountDTO) {
         return adminService.changePasswordAdmin(changePasswordAccountDTO);
     }
+
+    @GetMapping("/{id}")
+    public String getAdminById(@PathVariable Long id) {
+        return adminService.getById(id);
+    }
+
+    @GetMapping("/profile")
+    public String getProfile(){
+        return adminService.getInfoUser().toString();
+    }
 }

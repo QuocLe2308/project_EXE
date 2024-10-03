@@ -25,6 +25,10 @@ public class UserController {
         return userService.getAllUser();
     }
 
+    @GetMapping("/{id}")
+    public String getUserById(@PathVariable Long id) {
+        return userService.getById(id);
+    }
 
     @PostMapping("/login")
     public String loginUser(@RequestBody LoginDTO loginDTO, HttpServletRequest request) {
@@ -61,6 +65,11 @@ public class UserController {
     @PostMapping("/change_password")
     public String changePasswordAdmin(@RequestBody ChangePasswordAccountDTO changePasswordAccountDTO) {
         return userService.changePasswordUser(changePasswordAccountDTO);
+    }
+
+    @GetMapping("/profile")
+    public String getUserProfile() {
+        return userService.getInfoUser().toString();
     }
 
 }

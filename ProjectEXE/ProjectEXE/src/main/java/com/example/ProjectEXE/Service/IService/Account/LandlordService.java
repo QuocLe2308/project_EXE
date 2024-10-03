@@ -21,4 +21,5 @@ public interface LandlordService {
     public Landlord getInfoUser();
     public List<String> validateLandlord(Landlord landlord, String type);
     public String hashString(String input);
+    public String getById(Long id);
 }

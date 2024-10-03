@@ -41,7 +41,7 @@ public class Landlord {
     @Column(name = "role", nullable = false)
     private Integer role;
 
-    @Column(name = "is_disable", nullable = false, columnDefinition = "TINYINT(1) default 0")
+    @Column(name = "is_disable", columnDefinition = "TINYINT(1) default 0")
     private boolean isDisable;
 
     @Column(name = "created_at")

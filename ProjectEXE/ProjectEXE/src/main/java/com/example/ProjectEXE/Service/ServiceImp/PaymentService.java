@@ -138,9 +138,8 @@ public class PaymentService implements com.example.ProjectEXE.Service.IService.P
             payment.setAmount(price);
             payment.setUser(userRepository.findByUserID(jwtUtil.getUserId()));
             payment.setProperty(existingProperty);
+            payment.setContent("Payment for " + existingProperty.getPropertyName() + " Property" );
             paymentRepository.save(payment);
-//            payment.setQrData(getQrBank(payment.getPaymentID()));
-//            paymentRepository.save(payment);
             JSONObject successResponse = responseUtil.getSuccessResponse("Success!", payment);
             return successResponse.toString();
         }else{
@@ -233,9 +232,9 @@ public class PaymentService implements com.example.ProjectEXE.Service.IService.P
         jsonPayload.put("accountName", "Le Tan Quoc");
         jsonPayload.put("acqId", 970436);
         jsonPayload.put("amount", payments.getAmount());
-        jsonPayload.put("addInfo", "PAY_" + payments.getPaymentID() + "_CSSK");
+        jsonPayload.put("addInfo", payments.getContent() + " " + payments.getPaymentID());
         jsonPayload.put("format", "text");
-        jsonPayload.put("template", "PAY_" + payments.getPaymentID() + "_CSSK");
+        jsonPayload.put("template", payments.getContent() + " " + payments.getPaymentID());
 
         String qrDataURL = null;
         try {
@@ -279,7 +278,7 @@ public class PaymentService implements com.example.ProjectEXE.Service.IService.P
                 int amount = Integer.parseInt(amountStr.replace(",", ""));
                 String description = transactionNode.get("Description").asText();
 
-                String contentbank = "PAY" + payment.getPaymentID() + "CSSK";
+                String contentbank = payment.getContent() + " " + payment.getPaymentID();
                 if (description.contains(contentbank) && amount >= payment.getAmount()) {
                     payment.setPaymentStatus(1);
                     payment.setCreatedAt(LocalDateTime.now());

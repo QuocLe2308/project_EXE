@@ -1,6 +1,7 @@
 package com.example.ProjectEXE.Service.ServiceImp.Account;
 
 import com.example.ProjectEXE.DTO.Account.*;
+import com.example.ProjectEXE.Models.Account.Landlord;
 import com.example.ProjectEXE.Models.Account.User;
 import com.example.ProjectEXE.Repository.Account.UserRepository;
 import com.example.ProjectEXE.Service.IService.Account.UserService;
@@ -45,6 +46,19 @@ public class UserServiceImp implements UserService {
             return errorResponse.toString();
         }
     }
+
+    @Override
+    public String getById(Long id){
+        User user = userRepository.findByUserID(id);
+        if(jwtUtil.getRole() != 1) {
+            JSONObject response = responseUtil.getErrorResponse(String.join(", ", "You do not have permission to do this action!"));
+            return response.toString();
+        }
+        else{
+            return new JSONObject(user).toString();
+        }
+    }
+
     @Override
     public String loginUser(LoginDTO loginDTO, HttpServletRequest request) {
         System.out.println("id session luc login " + request.getSession().getId());
@@ -308,5 +322,12 @@ public class UserServiceImp implements UserService {
             JSONObject response = responseUtil.getErrorResponse("Old password is not correct!");
             return response.toString();
         }
+    }
+
+    @Override
+    public User getInfoUser() {
+        User user = userRepository.findByUserID(jwtUtil.getUserId());
+        user.setPasswordHash("");
+        return user;
     }
 }

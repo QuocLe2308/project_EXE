@@ -23,4 +23,5 @@ public interface AdminService {
     public Admin getInfoUser();
     public List<String> validateAdmin(Admin admin, String type);
     public String hashString(String input);
+    public String getById(Long id);
 }
