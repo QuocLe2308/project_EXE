@@ -88,15 +88,15 @@ public class TokenValidationFilter implements Filter {
                 requestURI.startsWith("/api/landlord/delete") ||
                 requestURI.startsWith("/api/property/delete/")
                 ) &&
-                role != 1) {
+                role != 1) { 
             httpResponse.sendError(HttpServletResponse.SC_FORBIDDEN, "You do not have permission to access this resource!");
             return;
         }
 
-        if ((requestURI.equals("/api/property/add") && role != 2)) {
-            httpResponse.sendError(HttpServletResponse.SC_FORBIDDEN, "You do not have permission to do this action!");
-            return;
-        }
+//        if ((requestURI.equals("/api/property/add") && role != 2)) {
+//            httpResponse.sendError(HttpServletResponse.SC_FORBIDDEN, "You do not have permission to do this action!");
+//            return;
+//        }
 
         chain.doFilter(request, response);
     }

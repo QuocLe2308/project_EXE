@@ -18,6 +18,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/property")
 @AllArgsConstructor
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class PropertyController {
 
     @Autowired
@@ -34,9 +35,9 @@ public class PropertyController {
         return propertyService.createProperty(property);
     }
 
-    @PutMapping()
-    public String updateProperty(@RequestBody EditPropertyDTO editPropertyDTO) {
-        return propertyService.editProperty(editPropertyDTO);
+    @PutMapping("/{id}")
+    public String updateProperty(@PathVariable Long id,@RequestBody EditPropertyDTO editPropertyDTO) {
+        return propertyService.editProperty(id, editPropertyDTO);
     }
 
     @DeleteMapping("/{id}")
@@ -56,7 +57,6 @@ public class PropertyController {
         return ResponseEntity.ok(properties);
     }
 
-    // Lấy danh sách nhà trọ theo giá từ thấp đến cao, trả về JSON
     @GetMapping("/asc")
     public ResponseEntity<List<PropertyWithImagesDTO>> getAscProperty() {
         List<PropertyWithImagesDTO> properties = propertyService.sortByPriceLowToHigh();
@@ -88,6 +88,15 @@ public class PropertyController {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(propertiesWithImages);
     }
-
-
+    @GetMapping("/listProperty")
+    public ResponseEntity<?> getPropertiesByLandlordId() {
+        try {
+            List<Property> properties = propertyService.getAllPropertiesByLandlordId();
+            return ResponseEntity.ok(properties);
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
+        }
+    }
 }

@@ -1,5 +1,6 @@
 package com.example.ProjectEXE.Repository;
 
+import com.example.ProjectEXE.Models.Account.Landlord;
 import com.example.ProjectEXE.Models.Property;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -27,6 +28,8 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
             @Param("userLatitude") double userLatitude,
             @Param("userLongitude") double userLongitude,
             @Param("distance") double distance);
+    List<Property> findAllByOwner_LandlordID(Long landlordID);
 
+//    List<Property> findAllByOwner_Id(Long landlordId);
 }
 

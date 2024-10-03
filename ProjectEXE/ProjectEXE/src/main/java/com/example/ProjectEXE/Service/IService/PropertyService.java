@@ -11,7 +11,7 @@ import java.util.List;
 public interface PropertyService {
     public  String createProperty(Property property);
     public List<String> validateProperty(Property property, String type);
-    public String editProperty(EditPropertyDTO editPropertyDTO);
+//    public String editProperty(EditPropertyDTO editPropertyDTO);
     public String deleteProperty(Long id);
 //    public List<Property> sortByPriceHighToLow();
     public List<PropertyWithImagesDTO> sortByPriceHighToLow();
@@ -28,4 +28,6 @@ public interface PropertyService {
 //    public List<Property> getPropertiesWithinDistance(double userLatitude, double userLongitude, double distance);
     public List<PropertyWithImagesDTO> getPropertiesWithinDistance(double latitude, double longitude, double distance) throws IOException;
     public List<PropertyWithImagesDTO> convertPropertiesToDTO(List<Property> properties);
+    public List<Property> getAllPropertiesByLandlordId();
+    public String editProperty(Long id, EditPropertyDTO editPropertyDTO);
 }

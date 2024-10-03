@@ -86,27 +86,59 @@ public class PropertyServiceImp implements PropertyService {
     }
 
 
+//    @Override
+//    public String editProperty(EditPropertyDTO editPropertyDTO) {
+//        System.out.println("id truyen tu front end "+editPropertyDTO.getPropertyId());
+//        Property property = propertyRepository.findByPropertyId(editPropertyDTO.getPropertyId());
+//        if (!Objects.equals(property.getOwner().getLandlordID(), jwtUtil.getUserId()) && jwtUtil.getRole() != 2) {
+//            JSONObject response = responseUtil.getErrorResponse(String.join(", ", "You do not have permission to do this action!"));
+//            return response.toString();
+//        }
+//
+//        if (!propertyRepository.existsByPropertyId(editPropertyDTO.getPropertyId())) {
+//            JSONObject response = responseUtil.getErrorResponse(String.join(", ", "Property does not exist!"));
+//            return response.toString();
+//        } else {
+//            if (editPropertyDTO.getOwner() != null) {
+//                property.setOwner(editPropertyDTO.getOwner());
+//            }
+//            property.setDescription(editPropertyDTO.getDescription());
+//            property.setMonthlyRent(editPropertyDTO.getMonthlyRent());
+//            property.setMaxTenants(editPropertyDTO.getMaxTenants());
+//            property.setUser(editPropertyDTO.getUser());
+//            propertyRepository.save(property);
+//            JSONObject response = responseUtil.getSuccessResponse("success");
+//            return new JSONObject(property).toString();
+//        }
+//    }
+
     @Override
-    public String editProperty(EditPropertyDTO editPropertyDTO) {
-        Property property = propertyRepository.findByPropertyId(editPropertyDTO.getId());
-        if(!Objects.equals(property.getOwner().getLandlordID(), jwtUtil.getUserId()) && jwtUtil.getRole() != 2) {
-            JSONObject response = responseUtil.getErrorResponse(String.join(", ", "You do not have permission to do this action!"));
+    public String editProperty(Long id, EditPropertyDTO editPropertyDTO) {
+        System.out.println("ID truyền từ front end: " + id);
+        Property property = propertyRepository.findByPropertyId(id);
+
+        if (!Objects.equals(property.getOwner().getLandlordID(), jwtUtil.getUserId()) && jwtUtil.getRole() != 2) {
+            JSONObject response = responseUtil.getErrorResponse("You do not have permission to do this action!");
             return response.toString();
         }
-        if (!propertyRepository.existsByPropertyId(editPropertyDTO.getId())) {
-            JSONObject response = responseUtil.getErrorResponse(String.join(", ", "Property does not exist!"));
+
+        if (!propertyRepository.existsByPropertyId(id)) {
+            JSONObject response = responseUtil.getErrorResponse("Property does not exist!");
             return response.toString();
         } else {
-            property.setOwner(editPropertyDTO.getOwner());
-            property.setDescription(editPropertyDTO.getDescription());
-            property.setMonthlyRent(editPropertyDTO.getMonthlyRent());
-            property.setMaxTenants(editPropertyDTO.getMaxTenants());
-            property.setUser(editPropertyDTO.getUser());
-            propertyRepository.save(property);
-            JSONObject response = responseUtil.getSuccessResponse("success");
-            return new JSONObject(property).toString();
+            if (editPropertyDTO.getOwner() != null) {
+                property.setOwner(editPropertyDTO.getOwner());
+            }
+                property.setPropertyName(editPropertyDTO.getPropertyName());
+                property.setDescription(editPropertyDTO.getDescription());
+                property.setMonthlyRent(editPropertyDTO.getMonthlyRent());
+                property.setMaxTenants(editPropertyDTO.getMaxTenants());
+                propertyRepository.save(property);
+                JSONObject response = responseUtil.getSuccessResponse("success");
+                return new JSONObject(property).toString();
         }
     }
+
 
     @Override
     @Transactional
@@ -262,6 +294,12 @@ public class PropertyServiceImp implements PropertyService {
         return propertyWithImagesDTOList;
     }
 
-
+    @Override
+    public List<Property> getAllPropertiesByLandlordId() {
+        if (jwtUtil.getRole() != 2) {
+            throw new SecurityException("You do not have permission to do this action!");
+        }
+        return propertyRepository.findAllByOwner_LandlordID(jwtUtil.getUserId());
+    }
 }
 
