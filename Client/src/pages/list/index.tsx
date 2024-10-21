@@ -11,6 +11,7 @@ import { FaHouse } from "react-icons/fa6";
 import PackageImage1 from "@/assets/images/package/1.jpg";
 import PackageImage2 from "@/assets/images/package/2.jpg";
 import PackageImage3 from "@/assets/images/package/3.jpg";
+import DetailModal from "@/components/Detail";
 
 const ListPage = () => {
   // Spinner
@@ -187,6 +188,7 @@ const ListPage = () => {
                       >
                         Chi tiết
                       </Link>
+                      {/* <DetailModal></DetailModal> */}
                       <Link
                         href="/payment"
                         className="btn btn-sm btn-primary px-3 btn-package-right"

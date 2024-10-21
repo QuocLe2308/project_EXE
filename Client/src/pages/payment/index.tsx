@@ -1,5 +1,13 @@
 import { useEffect } from "react";
-import { FaLongArrowAltUp } from "react-icons/fa";
+import { FaLongArrowAltUp, FaMoneyBillWave } from "react-icons/fa";
+import {
+  MdAccountCircle,
+  MdBrowserUpdated,
+  MdContentPaste,
+  MdDateRange,
+} from "react-icons/md";
+import { IoQrCode } from "react-icons/io5";
+import { GrStatusUnknown } from "react-icons/gr";
 
 import QrCodeImage from "@/assets/images/qr.jpg";
 
@@ -85,15 +93,34 @@ const PaymentPage = () => {
           </h1>
 
           <div style={{ paddingLeft: "200px" }}>
-            <p className="mb-2">Số tiền: 2.000.000 VNĐ</p>
-            <p className="mb-2">
-              Phương thức thanh toán: Online payment by Qr code
+            <p className="mb-2 d-flex align-items-center">
+              <FaMoneyBillWave className="me-2" size={22} color="#86b817" />
+              Số tiền: 2.000.000 VNĐ
             </p>
-            <p className="mb-2">Tài khoản: thanh@gmail.com</p>
-            <p className="mb-2">Nội dung: Thánh toán phòng trọ Mai Anh</p>
-            <p className="mb-2">Trạng thái: Đang chờ</p>
-            <p className="mb-2">Ngày tạo: 10/3/2024, 6:26:26 PM</p>
-            <p className="mb-2">Ngày cập nhật: 10/3/2024, 6:26:26 PM</p>
+            <p className="mb-2 d-flex align-items-center">
+              <IoQrCode className="me-2" size={22} color="#86b817" /> Phương
+              thức thanh toán: Online payment by Qr code
+            </p>
+            <p className="mb-2 d-flex align-items-center">
+              <MdAccountCircle className="me-2" size={22} color="#86b817" /> Tài
+              khoản: thanh@gmail.com
+            </p>
+            <p className="mb-2 d-flex align-items-center">
+              <MdContentPaste className="me-2" size={22} color="#86b817" />
+              Nội dung: Thánh toán phòng trọ Mai Anh
+            </p>
+            <p className="mb-2 d-flex align-items-center">
+              <GrStatusUnknown className="me-2" size={22} color="#86b817" />
+              Trạng thái: Đang chờ
+            </p>
+            <p className="mb-2 d-flex align-items-center">
+              <MdDateRange className="me-2" size={22} color="#86b817" />
+              Ngày tạo: 10/3/2024, 6:26:26 PM
+            </p>
+            <p className="mb-2 d-flex align-items-center">
+              <MdBrowserUpdated className="me-2" size={22} color="#86b817" />
+              Ngày cập nhật: 10/3/2024, 6:26:26 PM
+            </p>
           </div>
         </div>
         <div className="container-xxl py-6 col-lg-6">
