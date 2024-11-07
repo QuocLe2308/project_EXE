@@ -137,7 +137,7 @@ const LoginForm = ({ isCloseLogin, setIsCloseLogin }: LoginFormProps) => {
                     Chọn vai trò
                   </option>
                   <option value="admin">Admin</option>
-                  <option value="manager">Chủ trọ</option>
+                  <option value="landlord">Chủ trọ</option>
                   <option value="user">Người dùng</option>
                 </select>
               </div>
