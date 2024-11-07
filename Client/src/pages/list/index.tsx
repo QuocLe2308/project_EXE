@@ -10,6 +10,9 @@ import { FaHouse } from "react-icons/fa6";
 
 
 import { fetchAllProperties, fetchPropertiesByLocation, fetchPropertiesByPrice } from "@/pages/api/properties";
+import { useRouter } from "next/router";
+import Cookies from "js-cookie";
+import axios from "axios";
 interface Owner {
   landlordID: number;
   userName: string;
@@ -40,7 +43,57 @@ const ListPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<string>(''); // Sắp xếp giá
   const [activeFilter, setActiveFilter] = useState<string>('all'); // Theo dõi filter đang hoạt động
+  const router = useRouter();
+
+
+  const handleBookNow = async (propertyId: number) => {
+    const token = localStorage.getItem("token") || Cookies.get("token");
   
+    if (!token) {
+      setError('You need to be logged in to make a payment.');
+      return; // Dừng nếu không có token
+    }
+  
+    try {
+      const response = await fetch('http://localhost:8080/api/payment/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ property: { propertyId } }),
+      });
+  
+      const data = await response.json();
+      console.log("API response data:", data);  // In ra để kiểm tra cấu trúc
+  
+      if (data.status === "success") {
+        // Giả sử data.data là chuỗi đối tượng Payment
+        const paymentString = data.data;
+  
+        // Phân tích chuỗi để lấy paymentID
+        const regex = /paymentID=(\d+)/;
+        const match = paymentString.match(regex);
+  
+        if (match && match[1]) {
+          const paymentId = Number(match[1]);  // Lấy paymentID
+          console.log("Redirecting to payment page with paymentId:", paymentId);
+          router.push(`/payment?id=${paymentId}`);
+        } else {
+          console.log("Invalid paymentId format", paymentString);
+          setError("Invalid paymentId format");
+        }
+      } else {
+        setError('Payment creation failed');
+      }
+    } catch (err) {
+      setError('Error processing payment');
+      console.error('Error creating payment:', err);
+    }
+  };
+  
+
+
   // Spinner
   useEffect(() => {
     const spinner = setTimeout(() => {
@@ -56,16 +109,16 @@ const ListPage = () => {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
-  
+
   useEffect(() => {
-    if(distance === 0) {
+    if (distance === 0) {
       fetchAllProperties();
     }
     const loadProperties = async () => {
       try {
         setLoading(true);
         let response;
-        
+
         if (latitude && longitude && activeFilter === 'location') {
           response = await fetchPropertiesByLocation(latitude, longitude, distance);
           setProperties(response.data);
@@ -116,7 +169,7 @@ const ListPage = () => {
   const handleDistanceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setDistance(Number(event.target.value));
   };
-  
+
   return (
     <>
       {/* Spinner Start  */}
@@ -220,7 +273,7 @@ const ListPage = () => {
               </label>
             </div>
 
-            <button 
+            <button
               className="btn btn-primary rounded-pill py-2 px-4 mb-4"
               onClick={handleLocationSearch}
             >
@@ -280,13 +333,12 @@ const ListPage = () => {
                         >
                           Chi tiết
                         </Link>
-                        <Link
-                          href="/payment"
-                          className="btn btn-sm btn-primary px-3 btn-package-right"
-                          style={{ fontSize: "18px" }}
+                        <button
+                          onClick={() => handleBookNow(property.property.propertyId)}
+                          className="btn btn-warning"
                         >
-                          Đặt ngay
-                        </Link>
+                          Đặt Ngay
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -306,6 +358,7 @@ const ListPage = () => {
         <FaLongArrowAltUp />
       </button>
     </>
-  );};
+  );
+};
 
 export default ListPage;

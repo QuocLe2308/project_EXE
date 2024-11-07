@@ -5,6 +5,7 @@ import { IoMdClose } from "react-icons/io";
 import { MdOutlinePassword } from "react-icons/md";
 import { RiLockPasswordFill } from "react-icons/ri";
 import { Modal } from "reactstrap";
+import Cookies from 'js-cookie';
 import {
   AdminLogin,
   LandLordLogin,
@@ -56,6 +57,10 @@ const LoginForm = ({ isCloseLogin, setIsCloseLogin }: LoginFormProps) => {
       }
       if (response.data.status === "success") {
         console.log("checkLgContext", response.data);
+        localStorage.setItem('token', response.data.token);
+            localStorage.setItem('role', response.data.token); 
+            Cookies.set('token', response.data.token, { expires: 1 });
+            Cookies.set('role', response.data.role, { expires: 1 });
        
          userContext?.loginContext(username, response.data.token);
         
