@@ -39,6 +39,7 @@ import TeamImage2 from "@/assets/images/team/team-2.jpg";
 import TeamImage3 from "@/assets/images/team/team-3.jpg";
 import TeamImage4 from "@/assets/images/team/team-4.jpg";
 
+
 const Index: React.FC = () => {
   // Spinner
   useEffect(() => {

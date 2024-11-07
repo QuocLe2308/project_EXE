@@ -5,13 +5,70 @@ import { IoMdClose } from "react-icons/io";
 import { MdOutlinePassword } from "react-icons/md";
 import { RiLockPasswordFill } from "react-icons/ri";
 import { Modal } from "reactstrap";
-
+import {
+  AdminLogin,
+  LandLordLogin,
+  UserLogin,
+  fetchCaptcha,
+} from "../../pages/api/userauth";
+import { UserContext } from "../UserAuth/UserContext";
+import { useRouter } from "next/router";
+import { useContext, useEffect, useState } from "react";
 type LoginFormProps = {
   isCloseLogin: boolean;
   setIsCloseLogin: any;
 };
 
 const LoginForm = ({ isCloseLogin, setIsCloseLogin }: LoginFormProps) => {
+  const router = useRouter();
+  const userContext = useContext(UserContext);
+  const [captcha, setCaptcha] = useState("");
+  const [captchaImage, setCaptchaImage] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState("user");
+
+
+  const handleFetchCaptcha = async () => {
+    try {
+      const response = await fetchCaptcha();
+      setCaptchaImage(response.data.captcha);
+    } catch (err) {
+      console.error("Error fetching captcha:", err);
+    }
+  };
+
+  useEffect(() => {
+    handleFetchCaptcha();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      let response;
+      if (role === "admin") {
+        response = await AdminLogin(username, password, captcha);
+      } else if (role === "landlord") {
+        response = await LandLordLogin(username, password, captcha);
+      } else {
+        response = await UserLogin(username, password, captcha);
+      }
+      if (response.data.status === "success") {
+        console.log("checkLgContext", response.data);
+       
+         userContext?.loginContext(username, response.data.token);
+        
+        setIsCloseLogin(false)
+        router.push("/");
+      } else {
+        console.error("Login failed:", response.data.message);
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+    }
+  };
+
   return (
     <>
       <Modal isOpen={isCloseLogin} className="login-modal">
@@ -25,7 +82,7 @@ const LoginForm = ({ isCloseLogin, setIsCloseLogin }: LoginFormProps) => {
             <IoMdClose size={38} color="#ccc" />
           </div>
 
-          <form action="#">
+          <form onSubmit={handleSubmit}>
             <h2
               className="font-Nunito text-uppercase login-title"
               style={{
@@ -73,8 +130,10 @@ const LoginForm = ({ isCloseLogin, setIsCloseLogin }: LoginFormProps) => {
                     width: "100%",
                     height: "45px",
                   }}
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
                 >
-                  <option value="" disabled selected hidden>
+                  <option value="" disabled hidden>
                     Chọn vai trò
                   </option>
                   <option value="admin">Admin</option>
@@ -97,7 +156,12 @@ const LoginForm = ({ isCloseLogin, setIsCloseLogin }: LoginFormProps) => {
                 }}
               />
               <div className="login-input-field ms-3" style={{ flex: "1" }}>
-                <input type="text" required />
+                <input 
+                  type="text" 
+                  required 
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                />
                 <label>Nhập tài khoản</label>
               </div>
             </div>
@@ -115,7 +179,12 @@ const LoginForm = ({ isCloseLogin, setIsCloseLogin }: LoginFormProps) => {
                 }}
               />
               <div className="login-input-field ms-3" style={{ flex: "1" }}>
-                <input type="password" required />
+                <input 
+                  type="password" 
+                  required 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
                 <label>Nhập mật khẩu</label>
               </div>
             </div>
@@ -126,6 +195,7 @@ const LoginForm = ({ isCloseLogin, setIsCloseLogin }: LoginFormProps) => {
                 display: "flex",
               }}
             >
+            <img src={captchaImage} alt="Captcha" width={100} height={40} />
               <MdOutlinePassword
                 color="#ced4da"
                 style={{
@@ -133,7 +203,12 @@ const LoginForm = ({ isCloseLogin, setIsCloseLogin }: LoginFormProps) => {
                 }}
               />
               <div className="login-input-field ms-3" style={{ flex: "1" }}>
-                <input type="text" required />
+                <input 
+                  type="text" 
+                  required 
+                  value={captcha}
+                  onChange={(e) => setCaptcha(e.target.value)}
+                />
                 <label>Nhập mã xác nhận</label>
               </div>
             </div>

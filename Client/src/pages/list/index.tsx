@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   FaLongArrowAltUp,
   FaStar,
@@ -8,12 +8,39 @@ import {
 } from "react-icons/fa";
 import { FaHouse } from "react-icons/fa6";
 
-import PackageImage1 from "@/assets/images/package/1.jpg";
-import PackageImage2 from "@/assets/images/package/2.jpg";
-import PackageImage3 from "@/assets/images/package/3.jpg";
-import DetailModal from "@/components/Detail";
+
+import { fetchAllProperties, fetchPropertiesByLocation, fetchPropertiesByPrice } from "@/pages/api/properties";
+interface Owner {
+  landlordID: number;
+  userName: string;
+  email: string;
+  fullName: string;
+  phoneNumber: string;
+}
+
+interface Property {
+  propertyId: number;
+  propertyName: string;
+  address: string;
+  monthlyRent: number;
+  owner: Owner;
+}
+
+interface PropertyResponse {
+  images: string[];
+  property: Property;
+}
 
 const ListPage = () => {
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
+  const [distance, setDistance] = useState<number>(50); // Khoảng cách mặc định là 50 km
+  const [properties, setProperties] = useState<PropertyResponse[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<string>(''); // Sắp xếp giá
+  const [activeFilter, setActiveFilter] = useState<string>('all'); // Theo dõi filter đang hoạt động
+  
   // Spinner
   useEffect(() => {
     const spinner = setTimeout(() => {
@@ -29,7 +56,67 @@ const ListPage = () => {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+  
+  useEffect(() => {
+    if(distance === 0) {
+      fetchAllProperties();
+    }
+    const loadProperties = async () => {
+      try {
+        setLoading(true);
+        let response;
+        
+        if (latitude && longitude && activeFilter === 'location') {
+          response = await fetchPropertiesByLocation(latitude, longitude, distance);
+          setProperties(response.data);
+        } else if (sortBy === '0') {
+          response = await fetchPropertiesByPrice('/property/asc');
+          setProperties(response.data);
+        } else if (sortBy === '1') {
+          response = await fetchPropertiesByPrice('/property/desc')
+          setProperties(response.data);
+        } else {
+          response = await fetchAllProperties();
+          setProperties(response.data.data);
 
+        }
+        setError(null);
+      } catch (err) {
+        setError('Failed to fetch properties');
+        console.error('Error fetching properties:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProperties();
+  }, [sortBy, latitude, longitude, distance, activeFilter]);
+
+  const handleSortChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setSortBy(event.target.value);
+  };
+
+  const handleLocationSearch = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setLatitude(position.coords.latitude);
+          setLongitude(position.coords.longitude);
+          setActiveFilter('location');
+        },
+        (error) => {
+          setError('Error getting location: ' + error.message);
+        }
+      );
+    } else {
+      setError('Geolocation is not supported by this browser.');
+    }
+  };
+
+  const handleDistanceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setDistance(Number(event.target.value));
+  };
+  
   return (
     <>
       {/* Spinner Start  */}
@@ -103,6 +190,8 @@ const ListPage = () => {
                   height: "50px",
                   fontSize: "16px",
                 }}
+                onChange={handleSortChange}
+                value={sortBy}
               >
                 <option value="" disabled selected hidden>
                   Sắp xếp theo giá
@@ -114,22 +203,27 @@ const ListPage = () => {
 
             <div className="form-floating mb-4">
               <input
-                type="text"
+                type="number"
                 className="form-control bg-transparent"
-                id="name"
-                placeholder="Your Name"
+                id="distance"
+                placeholder="Distance"
+                value={distance}
+                onChange={handleDistanceChange}
                 style={{
                   height: "50px",
                   color: "#2C3E50",
                   paddingTop: "20px",
                 }}
               />
-              <label htmlFor="name" style={{ fontSize: "16px" }}>
+              <label htmlFor="distance" style={{ fontSize: "16px" }}>
                 Khoảng cách (km)
               </label>
             </div>
 
-            <button className="btn btn-primary rounded-pill py-2 px-4 mb-4">
+            <button 
+              className="btn btn-primary rounded-pill py-2 px-4 mb-4"
+              onClick={handleLocationSearch}
+            >
               Tìm theo vị trí
             </button>
           </div>
@@ -138,759 +232,66 @@ const ListPage = () => {
         <div className="container-xxl py-5 col-lg-10">
           <div className="container">
             <div className="row g-4 justify-content-center flex-wrap">
-              <div
-                className="col-lg-4 col-md-6 wow fadeInUp"
-                data-wow-delay="0.1s"
-              >
-                <div className="package-item">
-                  <div className="overflow-hidden">
-                    <img className="img-fluid" src={PackageImage1.src} alt="" />
-                  </div>
-                  <div className="d-flex border-bottom">
-                    <p className="flex-fill text-center border-end py-2 d-flex align-items-center justify-content-center">
-                      <FaHouse className="me-2" size={20} />
-                      Mai Trâm
-                    </p>
-                    <p className="flex-fill text-center border-end py-2 d-flex align-items-center justify-content-center">
-                      <FaWarehouse className="me-2" size={20} />2 tầng
-                    </p>
-                    <p className="flex-fill text-center py-2 d-flex align-items-center justify-content-center">
-                      <FaUserFriends className="me-2" size={20} />3 người
-                    </p>
-                  </div>
-                  <div className="text-center p-4">
-                    <h3
-                      className="mb-1"
-                      style={{
-                        color: "#2C3E50",
-                        fontWeight: "700",
-                        fontSize: "28px",
-                      }}
-                    >
-                      3.000.000 VNĐ
-                    </h3>
-                    <div className="mb-3 d-flex justify-content-center">
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
+              {properties.map((property, index) => (
+                <div
+                  key={index}
+                  className="col-lg-4 col-md-6 wow fadeInUp"
+                  data-wow-delay={`0.${index % 3 + 1}s`}
+                >
+                  <div className="package-item">
+                    <div className="overflow-hidden">
+                      <img className="img-fluid" src={property.images[0]} alt="" />
                     </div>
-                    <p className="mb-4">
-                      Phòng trọ mới xây, đầy đủ tiện nghi, an ninh tốt, gần
-                      trung tâm, phù hợp cho sinh viên.
-                    </p>
-                    <div className="d-flex justify-content-center mb-2">
-                      <Link
-                        href="/"
-                        className="btn btn-sm btn-primary px-3 btn-package-left"
-                        style={{ fontSize: "18px" }}
+                    <div className="d-flex border-bottom">
+                      <p className="flex-fill text-center border-end py-2 d-flex align-items-center justify-content-center">
+                        <FaHouse className="me-2" size={20} />
+                        {property.property.propertyName}
+                      </p>
+                      <p className="flex-fill text-center border-end py-2 d-flex align-items-center justify-content-center">
+                        <FaWarehouse className="me-2" size={20} />
+                        {property.property.address}
+                      </p>
+                      <p className="flex-fill text-center py-2 d-flex align-items-center justify-content-center">
+                        <FaUserFriends className="me-2" size={20} />
+                        {property.property.owner.fullName}
+                      </p>
+                    </div>
+                    <div className="text-center p-4">
+                      <h3
+                        className="mb-1"
+                        style={{
+                          color: "#2C3E50",
+                          fontWeight: "700",
+                          fontSize: "28px",
+                        }}
                       >
-                        Chi tiết
-                      </Link>
-                      {/* <DetailModal></DetailModal> */}
-                      <Link
-                        href="/payment"
-                        className="btn btn-sm btn-primary px-3 btn-package-right"
-                        style={{ fontSize: "18px" }}
-                      >
-                        Đặt ngay
-                      </Link>
+                        {property.property.monthlyRent.toLocaleString()} VNĐ
+                      </h3>
+                      <div className="mb-3 d-flex justify-content-center">
+                        {[...Array(5)].map((_, i) => (
+                          <FaStar key={i} color="#86b817" />
+                        ))}
+                      </div>
+                      <div className="d-flex justify-content-center mb-2">
+                        <Link
+                          href="/"
+                          className="btn btn-sm btn-primary px-3 btn-package-left"
+                          style={{ fontSize: "18px" }}
+                        >
+                          Chi tiết
+                        </Link>
+                        <Link
+                          href="/payment"
+                          className="btn btn-sm btn-primary px-3 btn-package-right"
+                          style={{ fontSize: "18px" }}
+                        >
+                          Đặt ngay
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-              <div
-                className="col-lg-4 col-md-6 wow fadeInUp"
-                data-wow-delay="0.3s"
-              >
-                <div className="package-item">
-                  <div className="overflow-hidden">
-                    <img
-                      className="img-fluid"
-                      src={PackageImage2.src}
-                      alt=""
-                      height={283}
-                    />
-                  </div>
-                  <div className="d-flex border-bottom">
-                    <p className="flex-fill text-center border-end py-2 d-flex align-items-center justify-content-center">
-                      <FaHouse className="me-2" size={20} />
-                      Minh Thư
-                    </p>
-                    <p className="flex-fill text-center border-end py-2 d-flex align-items-center justify-content-center">
-                      <FaWarehouse className="me-2" size={20} />2 tầng
-                    </p>
-                    <p className="flex-fill text-center py-2 d-flex align-items-center justify-content-center">
-                      <FaUserFriends className="me-2" size={20} />2 người
-                    </p>
-                  </div>
-                  <div className="text-center p-4">
-                    <h3
-                      className="mb-1"
-                      style={{
-                        color: "#2C3E50",
-                        fontWeight: "700",
-                        fontSize: "28px",
-                      }}
-                    >
-                      2.800.000 VNĐ
-                    </h3>
-                    <div className="mb-3 d-flex justify-content-center">
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                    </div>
-                    <p className="mb-4">
-                      Phòng trọ thoáng mát, wifi miễn phí, nội thất cơ bản, vị
-                      trí thuận tiện.
-                    </p>
-                    <div className="d-flex justify-content-center mb-2">
-                      <Link
-                        href="/"
-                        className="btn btn-sm btn-primary px-3 btn-package-left"
-                        style={{ fontSize: "18px" }}
-                      >
-                        Chi tiết
-                      </Link>
-                      <Link
-                        href="/payment"
-                        className="btn btn-sm btn-primary px-3 btn-package-right"
-                        style={{ fontSize: "18px" }}
-                      >
-                        Đặt ngay
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div
-                className="col-lg-4 col-md-6 wow fadeInUp"
-                data-wow-delay="0.5s"
-              >
-                <div className="package-item">
-                  <div className="overflow-hidden">
-                    <img className="img-fluid" src={PackageImage3.src} alt="" />
-                  </div>
-                  <div className="d-flex border-bottom">
-                    <p className="flex-fill text-center border-end py-2 d-flex align-items-center justify-content-center">
-                      <FaHouse className="me-2" size={20} />
-                      Kim Như
-                    </p>
-                    <p className="flex-fill text-center border-end py-2 d-flex align-items-center justify-content-center">
-                      <FaWarehouse className="me-2" size={20} />2 tầng
-                    </p>
-                    <p className="flex-fill text-center py-2 d-flex align-items-center justify-content-center">
-                      <FaUserFriends className="me-2" size={20} />2 người
-                    </p>
-                  </div>
-                  <div className="text-center p-4">
-                    <h3
-                      className="mb-1"
-                      style={{
-                        color: "#2C3E50",
-                        fontWeight: "700",
-                        fontSize: "28px",
-                      }}
-                    >
-                      2.500.000 VNĐ
-                    </h3>
-                    <div className="mb-3 d-flex justify-content-center">
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                    </div>
-                    <p className="mb-4">
-                      Phòng trọ mới, trang bị điều hòa, nước nóng, bảo vệ 24/7,
-                      gần trường và chợ.
-                    </p>
-                    <div className="d-flex justify-content-center mb-2">
-                      <Link
-                        href="/"
-                        className="btn btn-sm btn-primary px-3 btn-package-left"
-                        style={{ fontSize: "18px" }}
-                      >
-                        Chi tiết
-                      </Link>
-                      <Link
-                        href="/payment"
-                        className="btn btn-sm btn-primary px-3 btn-package-right"
-                        style={{ fontSize: "18px" }}
-                      >
-                        Đặt ngay
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div
-                className="col-lg-4 col-md-6 wow fadeInUp"
-                data-wow-delay="0.1s"
-              >
-                <div className="package-item">
-                  <div className="overflow-hidden">
-                    <img className="img-fluid" src={PackageImage1.src} alt="" />
-                  </div>
-                  <div className="d-flex border-bottom">
-                    <p className="flex-fill text-center border-end py-2 d-flex align-items-center justify-content-center">
-                      <FaHouse className="me-2" size={20} />
-                      Mai Trâm
-                    </p>
-                    <p className="flex-fill text-center border-end py-2 d-flex align-items-center justify-content-center">
-                      <FaWarehouse className="me-2" size={20} />2 tầng
-                    </p>
-                    <p className="flex-fill text-center py-2 d-flex align-items-center justify-content-center">
-                      <FaUserFriends className="me-2" size={20} />3 người
-                    </p>
-                  </div>
-                  <div className="text-center p-4">
-                    <h3
-                      className="mb-1"
-                      style={{
-                        color: "#2C3E50",
-                        fontWeight: "700",
-                        fontSize: "28px",
-                      }}
-                    >
-                      3.000.000 VNĐ
-                    </h3>
-                    <div className="mb-3 d-flex justify-content-center">
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                    </div>
-                    <p className="mb-4">
-                      Phòng trọ mới xây, đầy đủ tiện nghi, an ninh tốt, gần
-                      trung tâm, phù hợp cho sinh viên.
-                    </p>
-                    <div className="d-flex justify-content-center mb-2">
-                      <Link
-                        href="/"
-                        className="btn btn-sm btn-primary px-3 btn-package-left"
-                        style={{ fontSize: "18px" }}
-                      >
-                        Chi tiết
-                      </Link>
-                      <Link
-                        href="/payment"
-                        className="btn btn-sm btn-primary px-3 btn-package-right"
-                        style={{ fontSize: "18px" }}
-                      >
-                        Đặt ngay
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div
-                className="col-lg-4 col-md-6 wow fadeInUp"
-                data-wow-delay="0.3s"
-              >
-                <div className="package-item">
-                  <div className="overflow-hidden">
-                    <img
-                      className="img-fluid"
-                      src={PackageImage2.src}
-                      alt=""
-                      height={283}
-                    />
-                  </div>
-                  <div className="d-flex border-bottom">
-                    <p className="flex-fill text-center border-end py-2 d-flex align-items-center justify-content-center">
-                      <FaHouse className="me-2" size={20} />
-                      Minh Thư
-                    </p>
-                    <p className="flex-fill text-center border-end py-2 d-flex align-items-center justify-content-center">
-                      <FaWarehouse className="me-2" size={20} />2 tầng
-                    </p>
-                    <p className="flex-fill text-center py-2 d-flex align-items-center justify-content-center">
-                      <FaUserFriends className="me-2" size={20} />2 người
-                    </p>
-                  </div>
-                  <div className="text-center p-4">
-                    <h3
-                      className="mb-1"
-                      style={{
-                        color: "#2C3E50",
-                        fontWeight: "700",
-                        fontSize: "28px",
-                      }}
-                    >
-                      2.800.000 VNĐ
-                    </h3>
-                    <div className="mb-3 d-flex justify-content-center">
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                    </div>
-                    <p className="mb-4">
-                      Phòng trọ thoáng mát, wifi miễn phí, nội thất cơ bản, vị
-                      trí thuận tiện.
-                    </p>
-                    <div className="d-flex justify-content-center mb-2">
-                      <Link
-                        href="/"
-                        className="btn btn-sm btn-primary px-3 btn-package-left"
-                        style={{ fontSize: "18px" }}
-                      >
-                        Chi tiết
-                      </Link>
-                      <Link
-                        href="/payment"
-                        className="btn btn-sm btn-primary px-3 btn-package-right"
-                        style={{ fontSize: "18px" }}
-                      >
-                        Đặt ngay
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div
-                className="col-lg-4 col-md-6 wow fadeInUp"
-                data-wow-delay="0.5s"
-              >
-                <div className="package-item">
-                  <div className="overflow-hidden">
-                    <img className="img-fluid" src={PackageImage3.src} alt="" />
-                  </div>
-                  <div className="d-flex border-bottom">
-                    <p className="flex-fill text-center border-end py-2 d-flex align-items-center justify-content-center">
-                      <FaHouse className="me-2" size={20} />
-                      Kim Như
-                    </p>
-                    <p className="flex-fill text-center border-end py-2 d-flex align-items-center justify-content-center">
-                      <FaWarehouse className="me-2" size={20} />2 tầng
-                    </p>
-                    <p className="flex-fill text-center py-2 d-flex align-items-center justify-content-center">
-                      <FaUserFriends className="me-2" size={20} />2 người
-                    </p>
-                  </div>
-                  <div className="text-center p-4">
-                    <h3
-                      className="mb-1"
-                      style={{
-                        color: "#2C3E50",
-                        fontWeight: "700",
-                        fontSize: "28px",
-                      }}
-                    >
-                      2.500.000 VNĐ
-                    </h3>
-                    <div className="mb-3 d-flex justify-content-center">
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                    </div>
-                    <p className="mb-4">
-                      Phòng trọ mới, trang bị điều hòa, nước nóng, bảo vệ 24/7,
-                      gần trường và chợ.
-                    </p>
-                    <div className="d-flex justify-content-center mb-2">
-                      <Link
-                        href="/"
-                        className="btn btn-sm btn-primary px-3 btn-package-left"
-                        style={{ fontSize: "18px" }}
-                      >
-                        Chi tiết
-                      </Link>
-                      <Link
-                        href="/payment"
-                        className="btn btn-sm btn-primary px-3 btn-package-right"
-                        style={{ fontSize: "18px" }}
-                      >
-                        Đặt ngay
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div
-                className="col-lg-4 col-md-6 wow fadeInUp"
-                data-wow-delay="0.1s"
-              >
-                <div className="package-item">
-                  <div className="overflow-hidden">
-                    <img className="img-fluid" src={PackageImage1.src} alt="" />
-                  </div>
-                  <div className="d-flex border-bottom">
-                    <p className="flex-fill text-center border-end py-2 d-flex align-items-center justify-content-center">
-                      <FaHouse className="me-2" size={20} />
-                      Mai Trâm
-                    </p>
-                    <p className="flex-fill text-center border-end py-2 d-flex align-items-center justify-content-center">
-                      <FaWarehouse className="me-2" size={20} />2 tầng
-                    </p>
-                    <p className="flex-fill text-center py-2 d-flex align-items-center justify-content-center">
-                      <FaUserFriends className="me-2" size={20} />3 người
-                    </p>
-                  </div>
-                  <div className="text-center p-4">
-                    <h3
-                      className="mb-1"
-                      style={{
-                        color: "#2C3E50",
-                        fontWeight: "700",
-                        fontSize: "28px",
-                      }}
-                    >
-                      3.000.000 VNĐ
-                    </h3>
-                    <div className="mb-3 d-flex justify-content-center">
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                    </div>
-                    <p className="mb-4">
-                      Phòng trọ mới xây, đầy đủ tiện nghi, an ninh tốt, gần
-                      trung tâm, phù hợp cho sinh viên.
-                    </p>
-                    <div className="d-flex justify-content-center mb-2">
-                      <Link
-                        href="/"
-                        className="btn btn-sm btn-primary px-3 btn-package-left"
-                        style={{ fontSize: "18px" }}
-                      >
-                        Chi tiết
-                      </Link>
-                      <Link
-                        href="/payment"
-                        className="btn btn-sm btn-primary px-3 btn-package-right"
-                        style={{ fontSize: "18px" }}
-                      >
-                        Đặt ngay
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div
-                className="col-lg-4 col-md-6 wow fadeInUp"
-                data-wow-delay="0.3s"
-              >
-                <div className="package-item">
-                  <div className="overflow-hidden">
-                    <img
-                      className="img-fluid"
-                      src={PackageImage2.src}
-                      alt=""
-                      height={283}
-                    />
-                  </div>
-                  <div className="d-flex border-bottom">
-                    <p className="flex-fill text-center border-end py-2 d-flex align-items-center justify-content-center">
-                      <FaHouse className="me-2" size={20} />
-                      Minh Thư
-                    </p>
-                    <p className="flex-fill text-center border-end py-2 d-flex align-items-center justify-content-center">
-                      <FaWarehouse className="me-2" size={20} />2 tầng
-                    </p>
-                    <p className="flex-fill text-center py-2 d-flex align-items-center justify-content-center">
-                      <FaUserFriends className="me-2" size={20} />2 người
-                    </p>
-                  </div>
-                  <div className="text-center p-4">
-                    <h3
-                      className="mb-1"
-                      style={{
-                        color: "#2C3E50",
-                        fontWeight: "700",
-                        fontSize: "28px",
-                      }}
-                    >
-                      2.800.000 VNĐ
-                    </h3>
-                    <div className="mb-3 d-flex justify-content-center">
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                    </div>
-                    <p className="mb-4">
-                      Phòng trọ thoáng mát, wifi miễn phí, nội thất cơ bản, vị
-                      trí thuận tiện.
-                    </p>
-                    <div className="d-flex justify-content-center mb-2">
-                      <Link
-                        href="/"
-                        className="btn btn-sm btn-primary px-3 btn-package-left"
-                        style={{ fontSize: "18px" }}
-                      >
-                        Chi tiết
-                      </Link>
-                      <Link
-                        href="/payment"
-                        className="btn btn-sm btn-primary px-3 btn-package-right"
-                        style={{ fontSize: "18px" }}
-                      >
-                        Đặt ngay
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div
-                className="col-lg-4 col-md-6 wow fadeInUp"
-                data-wow-delay="0.5s"
-              >
-                <div className="package-item">
-                  <div className="overflow-hidden">
-                    <img className="img-fluid" src={PackageImage3.src} alt="" />
-                  </div>
-                  <div className="d-flex border-bottom">
-                    <p className="flex-fill text-center border-end py-2 d-flex align-items-center justify-content-center">
-                      <FaHouse className="me-2" size={20} />
-                      Kim Như
-                    </p>
-                    <p className="flex-fill text-center border-end py-2 d-flex align-items-center justify-content-center">
-                      <FaWarehouse className="me-2" size={20} />2 tầng
-                    </p>
-                    <p className="flex-fill text-center py-2 d-flex align-items-center justify-content-center">
-                      <FaUserFriends className="me-2" size={20} />2 người
-                    </p>
-                  </div>
-                  <div className="text-center p-4">
-                    <h3
-                      className="mb-1"
-                      style={{
-                        color: "#2C3E50",
-                        fontWeight: "700",
-                        fontSize: "28px",
-                      }}
-                    >
-                      2.500.000 VNĐ
-                    </h3>
-                    <div className="mb-3 d-flex justify-content-center">
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                    </div>
-                    <p className="mb-4">
-                      Phòng trọ mới, trang bị điều hòa, nước nóng, bảo vệ 24/7,
-                      gần trường và chợ.
-                    </p>
-                    <div className="d-flex justify-content-center mb-2">
-                      <Link
-                        href="/"
-                        className="btn btn-sm btn-primary px-3 btn-package-left"
-                        style={{ fontSize: "18px" }}
-                      >
-                        Chi tiết
-                      </Link>
-                      <Link
-                        href="/payment"
-                        className="btn btn-sm btn-primary px-3 btn-package-right"
-                        style={{ fontSize: "18px" }}
-                      >
-                        Đặt ngay
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div
-                className="col-lg-4 col-md-6 wow fadeInUp"
-                data-wow-delay="0.1s"
-              >
-                <div className="package-item">
-                  <div className="overflow-hidden">
-                    <img className="img-fluid" src={PackageImage1.src} alt="" />
-                  </div>
-                  <div className="d-flex border-bottom">
-                    <p className="flex-fill text-center border-end py-2 d-flex align-items-center justify-content-center">
-                      <FaHouse className="me-2" size={20} />
-                      Mai Trâm
-                    </p>
-                    <p className="flex-fill text-center border-end py-2 d-flex align-items-center justify-content-center">
-                      <FaWarehouse className="me-2" size={20} />2 tầng
-                    </p>
-                    <p className="flex-fill text-center py-2 d-flex align-items-center justify-content-center">
-                      <FaUserFriends className="me-2" size={20} />3 người
-                    </p>
-                  </div>
-                  <div className="text-center p-4">
-                    <h3
-                      className="mb-1"
-                      style={{
-                        color: "#2C3E50",
-                        fontWeight: "700",
-                        fontSize: "28px",
-                      }}
-                    >
-                      3.000.000 VNĐ
-                    </h3>
-                    <div className="mb-3 d-flex justify-content-center">
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                    </div>
-                    <p className="mb-4">
-                      Phòng trọ mới xây, đầy đủ tiện nghi, an ninh tốt, gần
-                      trung tâm, phù hợp cho sinh viên.
-                    </p>
-                    <div className="d-flex justify-content-center mb-2">
-                      <Link
-                        href="/"
-                        className="btn btn-sm btn-primary px-3 btn-package-left"
-                        style={{ fontSize: "18px" }}
-                      >
-                        Chi tiết
-                      </Link>
-                      <Link
-                        href="/payment"
-                        className="btn btn-sm btn-primary px-3 btn-package-right"
-                        style={{ fontSize: "18px" }}
-                      >
-                        Đặt ngay
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div
-                className="col-lg-4 col-md-6 wow fadeInUp"
-                data-wow-delay="0.3s"
-              >
-                <div className="package-item">
-                  <div className="overflow-hidden">
-                    <img
-                      className="img-fluid"
-                      src={PackageImage2.src}
-                      alt=""
-                      height={283}
-                    />
-                  </div>
-                  <div className="d-flex border-bottom">
-                    <p className="flex-fill text-center border-end py-2 d-flex align-items-center justify-content-center">
-                      <FaHouse className="me-2" size={20} />
-                      Minh Thư
-                    </p>
-                    <p className="flex-fill text-center border-end py-2 d-flex align-items-center justify-content-center">
-                      <FaWarehouse className="me-2" size={20} />2 tầng
-                    </p>
-                    <p className="flex-fill text-center py-2 d-flex align-items-center justify-content-center">
-                      <FaUserFriends className="me-2" size={20} />2 người
-                    </p>
-                  </div>
-                  <div className="text-center p-4">
-                    <h3
-                      className="mb-1"
-                      style={{
-                        color: "#2C3E50",
-                        fontWeight: "700",
-                        fontSize: "28px",
-                      }}
-                    >
-                      2.800.000 VNĐ
-                    </h3>
-                    <div className="mb-3 d-flex justify-content-center">
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                    </div>
-                    <p className="mb-4">
-                      Phòng trọ thoáng mát, wifi miễn phí, nội thất cơ bản, vị
-                      trí thuận tiện.
-                    </p>
-                    <div className="d-flex justify-content-center mb-2">
-                      <Link
-                        href="/"
-                        className="btn btn-sm btn-primary px-3 btn-package-left"
-                        style={{ fontSize: "18px" }}
-                      >
-                        Chi tiết
-                      </Link>
-                      <Link
-                        href="/payment"
-                        className="btn btn-sm btn-primary px-3 btn-package-right"
-                        style={{ fontSize: "18px" }}
-                      >
-                        Đặt ngay
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div
-                className="col-lg-4 col-md-6 wow fadeInUp"
-                data-wow-delay="0.5s"
-              >
-                <div className="package-item">
-                  <div className="overflow-hidden">
-                    <img className="img-fluid" src={PackageImage3.src} alt="" />
-                  </div>
-                  <div className="d-flex border-bottom">
-                    <p className="flex-fill text-center border-end py-2 d-flex align-items-center justify-content-center">
-                      <FaHouse className="me-2" size={20} />
-                      Kim Như
-                    </p>
-                    <p className="flex-fill text-center border-end py-2 d-flex align-items-center justify-content-center">
-                      <FaWarehouse className="me-2" size={20} />2 tầng
-                    </p>
-                    <p className="flex-fill text-center py-2 d-flex align-items-center justify-content-center">
-                      <FaUserFriends className="me-2" size={20} />2 người
-                    </p>
-                  </div>
-                  <div className="text-center p-4">
-                    <h3
-                      className="mb-1"
-                      style={{
-                        color: "#2C3E50",
-                        fontWeight: "700",
-                        fontSize: "28px",
-                      }}
-                    >
-                      2.500.000 VNĐ
-                    </h3>
-                    <div className="mb-3 d-flex justify-content-center">
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                      <FaStar color="#86b817" />
-                    </div>
-                    <p className="mb-4">
-                      Phòng trọ mới, trang bị điều hòa, nước nóng, bảo vệ 24/7,
-                      gần trường và chợ.
-                    </p>
-                    <div className="d-flex justify-content-center mb-2">
-                      <Link
-                        href="/"
-                        className="btn btn-sm btn-primary px-3 btn-package-left"
-                        style={{ fontSize: "18px" }}
-                      >
-                        Chi tiết
-                      </Link>
-                      <Link
-                        href="/payment"
-                        className="btn btn-sm btn-primary px-3 btn-package-right"
-                        style={{ fontSize: "18px" }}
-                      >
-                        Đặt ngay
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
@@ -905,7 +306,6 @@ const ListPage = () => {
         <FaLongArrowAltUp />
       </button>
     </>
-  );
-};
+  );};
 
 export default ListPage;

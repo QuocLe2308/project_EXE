@@ -1,4 +1,4 @@
-import React, { use, useEffect, useState } from "react";
+import React, { use, useEffect, useState, useContext } from "react";
 import {
   FaFacebookF,
   FaInstagram,
@@ -15,11 +15,13 @@ import { useRouter } from "next/router";
 import logo from "@/assets/images/logo.jpg";
 import LoginForm from "../LoginForm";
 import RegisterForm from "../RegisterForm";
+import { UserContext } from "../UserAuth/UserContext";
 
 const Navbar = () => {
   const router = useRouter();
   const [routeActive, setRouteActive] = useState<any>(undefined);
-
+  const context = useContext(UserContext);
+  const {user, logout} = context;
   const routeChange = [
     {
       route: "/",
@@ -41,6 +43,7 @@ const Navbar = () => {
     },
   ];
 
+   console.log("nav bar check >>>>" + user);
   useEffect(() => {
     const value: any = routeChange.find((i) => i.route === router.pathname);
     setRouteActive(value);
@@ -201,38 +204,51 @@ const Navbar = () => {
                   </Link>
                 </div>
                 <div>
-                  <button
-                    className="btn btn-primary rounded-pill py-2 px-4 me-4"
-                    onClick={() => {
-                      setIsCloseLogin(true);
-                    }}
-                  >
-                    Đăng nhập
-                  </button>
+                  {user?.auth ? (
+                    <button
+                      className="btn btn-primary rounded-pill py-2 px-4"
+                      onClick={() => {
+                        logout();
+                      }}
+                    >
+                      Đăng xuất
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        className="btn btn-primary rounded-pill py-2 px-4 me-4"
+                        onClick={() => {
+                          setIsCloseLogin(true);
+                        }}
+                      >
+                        Đăng nhập
+                      </button>
 
-                  {isCloseLogin && (
-                    <LoginForm
-                      isCloseLogin={isCloseLogin}
-                      setIsCloseLogin={setIsCloseLogin}
-                    />
+                      {isCloseLogin && (
+                        <LoginForm
+                          isCloseLogin={isCloseLogin}
+                          setIsCloseLogin={setIsCloseLogin}
+                        />
+                      )}
+
+                      <button
+                        className="btn btn-primary rounded-pill py-2 px-4"
+                        onClick={() => {
+                          setIsCloseRegister(true);
+                        }}
+                      >
+                        Đăng ký
+                      </button>
+
+                      {isCloseRegister && (
+                        <RegisterForm
+                          isCloseRegister={isCloseRegister}
+                          setIsCloseRegister={setIsCloseRegister}
+                        />
+                      )}
+                    </>
                   )}
-
-                  <button
-                    className="btn btn-primary rounded-pill py-2 px-4"
-                    onClick={() => {
-                      setIsCloseRegister(true);
-                    }}
-                  >
-                    Đăng ký
-                  </button>
-
-                  {isCloseRegister && (
-                    <RegisterForm
-                      isCloseRegister={isCloseRegister}
-                      setIsCloseRegister={setIsCloseRegister}
-                    />
-                  )}
-                </div>
+                </div>             
               </div>
             </nav>
 
