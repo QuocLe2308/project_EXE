@@ -1,9 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import {  adminEditProfile, adminProfile, landlordEditProfile, landlordProfile, userEditProfile, userProfile } from "../api/user";
+import { UserContext } from "@/components/UserAuth/UserContext";
+import router from "next/router";
+
+interface updateUserProfile {
+  id: number;
+  fullName: string;
+  phoneNumber: string;
+  address: string;
+}
 
 const EditProfile = () => {
   const [profile, setProfile] = useState<{
@@ -17,62 +27,24 @@ const EditProfile = () => {
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const router = useRouter();
+  const context = useContext(UserContext);
+  const { user } = context;
+
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const token = Cookies.get("token");
-      const role = Cookies.get("role");
-
-      if (!token || !role) {
+      if (!user) {
         setError("Bạn chưa đăng nhập");
         setLoading(false);
         return;
       }
-
-      try {
-        let response;
-
-        switch (role) {
-          case "1":
-            response = await axios.get("http://localhost:8080/api/admin/profile", {
-              headers: { Authorization: `Bearer ${token}` },
-            });
-            break;
-          case "2":
-            response = await axios.get("http://localhost:8080/api/landlord/profile", {
-              headers: { Authorization: `Bearer ${token}` },
-            });
-            break;
-          case "3":
-            response = await axios.get("http://localhost:8080/api/user/profile", {
-              headers: { Authorization: `Bearer ${token}` },
-            });
-            break;
-          default:
-            setError("Vai trò không hợp lệ");
-            setLoading(false);
-            return;
-        }
-
-        if (response.data) {
-          console.log("Dữ liệu profile nhận được:", response.data);
-          if (role === "1") {
-            setProfile({ ...response.data, adminID: response.data.adminID });
-          }
-          else if(role == "2"){
-            setProfile({ ...response.data, landlordID: response.data.landlordID });
-          } else {
-            setProfile(response.data);
-          }
-        } else {
-          setError("Không nhận được dữ liệu từ server");
-        }
-      } catch (error) {
-        console.error("Lỗi khi lấy thông tin profile:", error);
-        setError("Có lỗi xảy ra khi lấy thông tin profile");
-      } finally {
-        setLoading(false);
+     const response = await (user?.role === 1 ? adminProfile() : user?.role === 2 ? landlordProfile() : userProfile());   
+     console.log("Response:", response.data);
+      setLoading(false);
+      if (response.data) {
+        setProfile(response.data);
+      } else {
+        setError("Không nhận được dữ liệu từ server");
       }
     };
 
@@ -96,42 +68,25 @@ const EditProfile = () => {
     }
 
     try {
-      let response;
       console.log("Profile data before update:", profile);
 
-      const updateData = {
-        id: role === "1" ? profile.adminID : role === "2" ? profile.landlordID : profile.userID,
+      const updateData: updateUserProfile = {
+        id: user?.role === 1 ? profile.adminID : user?.role === 2 ? profile.landlordID : profile.userID,
         fullName: profile.fullName,
         phoneNumber: profile.phoneNumber,
         address: profile.address,
       };
 
-      switch (role) {
-        case "1":
-          response = await axios.put(
-            "http://localhost:8080/api/admin",
-            updateData,
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-          break;
-        case "2":
-          response = await axios.put(
-            "http://localhost:8080/api/landlord",
-            updateData,
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-          break;
-        case "3":
-          response = await axios.put(
-            "http://localhost:8080/api/user",
-            updateData,
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-          break;
-        default:
-          setError("Vai trò không hợp lệ");
-          return;
+      let response;
+      if (user?.role === 1) {
+        response = await adminEditProfile(updateData);
+      } else if (user?.role === 2) {
+        response = await landlordEditProfile(updateData);
+      } else {
+        response = await userEditProfile(updateData);
       }
+      
+      console.log("Response:", response.data);
 
       if (response.status === 200) {
         console.log("Cập nhật hồ sơ thành công:", response.data);
@@ -144,7 +99,6 @@ const EditProfile = () => {
       setError("Có lỗi xảy ra khi cập nhật thông tin hồ sơ");
     }
   };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">

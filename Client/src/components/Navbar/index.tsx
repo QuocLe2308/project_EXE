@@ -184,12 +184,14 @@ const Navbar = () => {
                   >
                     Thông tin cá nhân
                   </Link>
-                <Link
-                    href="/list_account"
-                    className={`nav-item nav-link ${isActive("/list_account")}`}
-                  >
-                    Quản lý tài khoản
-                  </Link>
+                  {user?.role === 1 && (
+                    <Link
+                      href="/list_account"
+                      className={`nav-item nav-link ${isActive("/list_account")}`}
+                    >
+                      Quản lý tài khoản
+                    </Link>
+                  )}
                   <Link
                     href="/"
                     className={`nav-item nav-link ${isActive("/")}`}

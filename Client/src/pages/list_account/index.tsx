@@ -7,92 +7,67 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import { UserContext } from "@/components/UserAuth/UserContext";
-
-type Account = {
-  userID?: number;
-  landlordID?: number;
-  adminID?: number;
-  fullName: string;
-  userName: string;
-  email: string;
-  role: number;
-};
+import { fetchAccounts, deleteAccount } from "@/pages/api/admin";
+// type Account = {
+//   userID?: number;
+//   landlordID?: number;
+//   adminID?: number;
+//   fullName: string;
+//   userName: string;
+//   email: string;
+//   role: number;
+// };
 
 const IndexPage = () => {
-  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [accounts, setAccounts] = useState<any>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const { user }= useContext(UserContext);
+  
+  const fetchAccount = async () => {
+    setLoading(true);
+    try {
+      const token = Cookies.get("token");
+      const role = Cookies.get("role");
 
-  useEffect(() => {
-    const fetchAccounts = async () => {
-      setLoading(true);
-      try {
-        const token = Cookies.get("token");
-        const role = Cookies.get("role");
-
-        if (role !== "1") {
-          router.push("/HomePage");
-          return;
-        }
-
-        const [usersRes, landlordsRes, adminsRes] = await Promise.all([
-          axios.get("http://localhost:8080/api/user/viewList", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          axios.get("http://localhost:8080/api/landlord/viewList", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          axios.get("http://localhost:8080/api/admin/viewList", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-        ]);
-
-        const combinedAccounts: Account[] = [
-          ...usersRes.data.data.map((account: Account) => ({ ...account, role: 3 })),
-          ...landlordsRes.data.data.map((account: Account) => ({ ...account, role: 2 })),
-          ...adminsRes.data.data.map((account: Account) => ({ ...account, role: 1 })),
-        ];
-        setAccounts(combinedAccounts);
-      } catch (error) {
-        console.error("Lỗi khi lấy danh sách tài khoản:", error);
-        setError("Có lỗi xảy ra khi tải danh sách tài khoản.");
-      } finally {
-        setLoading(false);
+      if (role ! == "1") {
+        router.push("/HomePage");
+        return;
       }
-    };
+      var adminsRes = await fetchAccounts();
+      console.log(adminsRes.data);
 
-    fetchAccounts();
+      setAccounts(adminsRes.data.data);
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách tài khoản:", error);
+      setError("Có lỗi xảy ra khi tải danh sách tài khoản.");
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    
+
+    fetchAccount();
   }, [router, user]);
 
   const handleViewDetails = (accountId: number, role: number) => {
-    router.push(`/account_detail/${accountId}?role=${role}`);
+    router.push(`/account_detail/${accountId}`);
   };
 
-  const handleDeleteAccount = async (accountId: number, role: number) => {
+  const handleDeleteAccount = async (accountId: number) => {
     if (confirm("Bạn có chắc chắn muốn xóa tài khoản này không?")) {
       try {
-        const token = Cookies.get("token");
 
-        if (role === 3) {
-          await axios.delete(`http://localhost:8080/api/user/delete/${accountId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-        } else if (role === 2) {
-          await axios.delete(`http://localhost:8080/api/landlord/delete/${accountId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-        } else if (role === 1) {
-          await axios.delete(`http://localhost:8080/api/admin/delete/${accountId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+       var res = await deleteAccount(accountId);
+       console.log("res check >>. ", res);
+       if (res.status === 200) {
+          alert("Xóa tài khoản thành công");
+          fetchAccount();
+        } else {
+          alert("Xóa tài khoản thất bại");
         }
-
-        setAccounts(prevAccounts => prevAccounts.filter(account => {
-          const id = account.userID || account.landlordID || account.adminID;
-          return id !== accountId;
-        }));
       } catch (error) {
         console.error("Lỗi khi xóa tài khoản:", error);
         alert("Có lỗi xảy ra khi xóa tài khoản.");
@@ -189,7 +164,7 @@ const IndexPage = () => {
                                 Chi tiết
                               </button>
                               <button
-                                onClick={() => handleDeleteAccount(accountId, account.role)}
+                                onClick={() => handleDeleteAccount(accountId)}
                                 className="inline-flex items-center px-4 py-2 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg transition duration-200 ease-in-out transform hover:-translate-y-0.5"
                               >
                                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

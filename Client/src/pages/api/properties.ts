@@ -7,7 +7,15 @@ interface ErrorResponse {
   status?: number;
   headers?: any;
 }
-
+interface CreateDTO {
+  propertyName: string;
+  address: string;
+  description: string;
+  monthlyRent: number;
+  maxTenants: number;
+  latitude: string
+  longitude: string
+};
 const isAxiosError = (error: any): error is AxiosError => {
   return error.isAxiosError;
 };
@@ -33,6 +41,12 @@ const fetchPropertiesByLocation = (latitude: number, longitude: number, distance
         apiUrl,
     );
   };
+  const createProperty = (createDto: CreateDTO) => {
+    return axiosInstance.post(
+        "/property/add",
+        createDto,
+    );
+  };
 
 
-export { fetchAllProperties, fetchPropertiesByLocation, fetchPropertiesByPrice };
+export { fetchAllProperties, fetchPropertiesByLocation, fetchPropertiesByPrice, createProperty   };

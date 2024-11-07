@@ -3,60 +3,49 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
+import { createProperty } from '@/pages/api/properties';
+
+interface CreateDTO {
+    propertyName: string;
+    address: string;
+    description: string;
+    monthlyRent: number;
+    maxTenants: number;
+    latitude: string
+    longitude: string
+};
 
 export default function CreateProperty() {
     const [propertyName, setPropertyName] = useState('');
     const [address, setAddress] = useState('');
     const [description, setDescription] = useState('');
-    const [monthlyRent, setMonthlyRent] = useState('');
-    const [maxTenants, setMaxTenants] = useState('');
+    const [monthlyRent, setMonthlyRent] = useState<number>(0);
+    const [maxTenants, setMaxTenants] = useState<number>(1);
     const [latitude, setLatitude] = useState('');
     const [longitude, setLongitude] = useState('');
+
     const router = useRouter();
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-
-        const propertyData = {
+        const propertyData: CreateDTO = {
             propertyName,
             address,
             description,
-            monthlyRent: parseFloat(monthlyRent),
-            maxTenants: parseInt(maxTenants),
-            latitude: parseFloat(latitude),
-            longitude: parseFloat(longitude),
+            monthlyRent,
+            maxTenants,
+            latitude,
+            longitude
         };
-
-        const token = Cookies.get('token');
-
+        
         try {
-            const response = await fetch('http://localhost:8080/api/property/add', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-                body: JSON.stringify(propertyData),
-            });
-
-            if (response.ok) {
-                const property = await response.json();
-                console.log(property);
-                const propertyId = property.propertyId;
-
-                if (propertyId) {
-                    router.push(`/uploadimage?propertyId=${propertyId}`);
-                } else {
-                    console.error('Property ID is not available in response.');
-                    alert('Property ID không có sẵn, vui lòng kiểm tra lại.');
-                }
-            } else {
-                console.error('Failed to create property');
-                const errorMessage = await response.text();
-                console.error('Error message:', errorMessage);
-            }
-        } catch (error) {
-            console.error('Error:', error);
+            const res = await createProperty(propertyData);
+            console.log(res);
+            if (res) {
+                router.push(`/uploadimage?propertyId=${res.data.propertyId}`);
+            }       
+         } catch (error) {
+            console.error('Error creating property:', error);
         }
     };
 
@@ -99,7 +88,7 @@ export default function CreateProperty() {
                             <input
                                 type="number"
                                 value={monthlyRent}
-                                onChange={(e) => setMonthlyRent(e.target.value)}
+                                onChange={(e) => setMonthlyRent(Number(e.target.value))}
                                 required
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                             />
@@ -109,7 +98,7 @@ export default function CreateProperty() {
                             <input
                                 type="number"
                                 value={maxTenants}
-                                onChange={(e) => setMaxTenants(e.target.value)}
+                                onChange={(e) => setMaxTenants(Number(e.target.value))}
                                 required
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                             />

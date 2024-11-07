@@ -1,15 +1,18 @@
 "use client";
 
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
+import { UserContext } from '@/components/UserAuth/UserContext';
+import { uploadImage } from '../api/uploadimage';
 
 export default function UploadImage() {
     const [file, setFile] = useState<File | null>(null);
     const searchParams = useSearchParams();
     const propertyId = searchParams?.get('propertyId');
     const router = useRouter();
-
+    const context = useContext(UserContext);
+    const {user} = context;
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
             setFile(e.target.files[0]);
@@ -18,19 +21,14 @@ export default function UploadImage() {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-
-        const token = Cookies.get('token');
-
-        if (!token) {
+        if (!user.auth) {
             alert('Bạn cần đăng nhập để tải lên hình ảnh.');
             return;
         }
-
         if (!file) {
             alert('Please select an image file.');
             return;
         }
-
         const formData = new FormData();
         formData.append('file', file);
         if (propertyId) {
@@ -41,24 +39,18 @@ export default function UploadImage() {
         }
 
         try {
-            const response = await fetch('http://localhost:8080/api/image', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                },
-                body: formData,
-            });
-
+            const response = await uploadImage(formData);
             if (response.ok) {
                 alert('Image uploaded successfully!');
-                setFile(null);
             } else {
                 console.error('Failed to upload image');
                 const errorMessage = await response.text();
                 console.error('Error message:', errorMessage);
+                alert('Failed to upload image: ' + errorMessage);
             }
         } catch (error) {
             console.error('Error:', error);
+            alert('Error uploading image. Please try again.');
         }
     };
 

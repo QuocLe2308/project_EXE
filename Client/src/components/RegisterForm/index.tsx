@@ -86,7 +86,7 @@ const RegisterForm = ({
       } else {
         setOtpError('Invalid OTP. Please try again.');
       }
-      router.push('/login');
+      router.push('/');
     } catch (err) {
       console.error('Error during OTP confirmation:', err);
       setOtpError('Failed to confirm OTP. Please try again.');

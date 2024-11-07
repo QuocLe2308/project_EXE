@@ -1,10 +1,11 @@
 // src/app/accountManagement/[accountId]/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
-import axios from "axios";
+import { useContext, useEffect, useState } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
-import Cookies from "js-cookie";
+import { adminDetail, landlordDetail, userDetail } from "@/pages/api/user";
+import { UserContext } from "@/components/UserAuth/UserContext";
+import router from "next/router";
 
 type AccountDetails = {
   fullName: string;
@@ -19,51 +20,35 @@ type AccountDetails = {
 };
 
 const AccountDetailsPage = () => {
-  const { accountId } = useParams<{ accountId: string }>();
+  const { accountId } = useParams<{ accountId: string }>() || {}; // Fallback to empty object if `useParams` is null
   const searchParams = useSearchParams();
   const role = searchParams.get("role");
   const router = useRouter();
   const [accountDetails, setAccountDetails] = useState<AccountDetails | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-
+  const context = useContext(UserContext);
+  const { user } = context;
   useEffect(() => {
     const fetchAccountDetails = async () => {
-      setLoading(true);
-      try {
-        const token = Cookies.get("token");
+    
+        const response = await (
+          user?.role === 1 ? adminDetail(accountId) :
+          user?.role === 1 ? landlordDetail(accountId) :
+          userDetail(accountId)
+        );
+        console.log("Response:", response.data);
 
-        if (!token || !role) {
-          throw new Error("Token hoặc role không hợp lệ.");
-        }
-
-        let res;
-        if (role === "1") {
-          res = await axios.get(`http://localhost:8080/api/admin/${accountId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-        } else if (role === "2") {
-          res = await axios.get(`http://localhost:8080/api/landlord/${accountId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-        } else {
-          res = await axios.get(`http://localhost:8080/api/user/${accountId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-        }
-
-        setAccountDetails(res.data);
-      } catch (error) {
-        console.error("Error fetching account details:", error);
-        setError("Có lỗi xảy ra khi tải thông tin chi tiết tài khoản.");
-      } finally {
         setLoading(false);
-      }
+        if (response.data) {
+          setAccountDetails(response.data);
+        } else {
+          setError("Không nhận được dữ liệu từ server");
+        }
+
     };
 
-    if (accountId) {
-      fetchAccountDetails();
-    }
+    fetchAccountDetails();
   }, [accountId, role]);
 
   return (
