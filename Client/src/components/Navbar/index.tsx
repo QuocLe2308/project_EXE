@@ -178,6 +178,18 @@ const Navbar = () => {
 
               <div className="navbar-link-wrapper" id="navbarCollapse">
                 <div className="navbar-nav ms-auto py-0">
+                <Link
+                    href="/profile"
+                    className={`nav-item nav-link ${isActive("/profile")}`}
+                  >
+                    Thông tin cá nhân
+                  </Link>
+                <Link
+                    href="/list_account"
+                    className={`nav-item nav-link ${isActive("/list_account")}`}
+                  >
+                    Quản lý tài khoản
+                  </Link>
                   <Link
                     href="/"
                     className={`nav-item nav-link ${isActive("/")}`}

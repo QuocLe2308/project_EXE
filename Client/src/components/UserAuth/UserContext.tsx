@@ -49,11 +49,13 @@ const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
 
     localStorage.setItem("token", token);
     localStorage.setItem("username", username);
+    localStorage.setItem("role", decoded.role);
   };
 
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("username");
+    localStorage.removeItem("role");
     setUser({
       userID: "",
       username: "",
