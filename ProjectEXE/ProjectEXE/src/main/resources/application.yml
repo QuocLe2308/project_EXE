@@ -38,4 +38,4 @@ jwt:
 
 google:
   api:
-    key: AIzaSyAJkDmUHIfjP2esX0ZPuSxxbSyp_5LQkqQ
+    key: your_google_api_key
